@@ -365,9 +365,10 @@ export default function MyPage() {
       <section className="container mx-auto px-4 py-16">
         <h2 className="text-4xl font-bold mb-12 text-center">Powerful Solutions, One Platform</h2>
         <div className="grid md:grid-cols-3 gap-12">
+          {/* Clock Widget Card */}
           <div className="flex flex-col">
-            {/* Widget Container */}
-            <div className="h-[300px] bg-zinc-800/50 rounded-3xl p-6 mb-6">
+            {/* Widget Container - Increased height */}
+            <div className="h-[400px] bg-zinc-800/50 rounded-3xl p-6 mb-6 flex items-center justify-center">
               <ClockWidget size="small" showCalendar={false} />
             </div>
             {/* Text Container */}
@@ -378,9 +379,10 @@ export default function MyPage() {
             </div>
           </div>
 
+          {/* Payment Widget Card */}
           <div className="flex flex-col">
-            {/* Widget Container */}
-            <div className="h-[300px] bg-zinc-800/50 rounded-3xl p-6 mb-6">
+            {/* Widget Container - Increased height */}
+            <div className="h-[400px] bg-zinc-800/50 rounded-3xl p-6 mb-6 flex items-center justify-center">
               <PaymentCardWidget size="small" />
             </div>
             {/* Text Container */}
@@ -391,9 +393,10 @@ export default function MyPage() {
             </div>
           </div>
 
+          {/* Chart Widget Card */}
           <div className="flex flex-col">
-            {/* Widget Container */}
-            <div className="h-[300px] bg-zinc-800/50 rounded-3xl p-6 mb-6">
+            {/* Widget Container - Increased height */}
+            <div className="h-[400px] bg-zinc-800/50 rounded-3xl p-6 mb-6 flex items-center justify-center">
               <ChartWidget size="small" />
             </div>
             {/* Text Container */}
@@ -428,72 +431,84 @@ export default function MyPage() {
 
           {/* Market Stats Grid */}
           <div className="grid md:grid-cols-2 gap-8 mb-16">
-            <div className="bg-zinc-800/50 rounded-3xl p-8 flex flex-col justify-between">
-              <div>
-                <h3 className="text-4xl font-bold text-blue-400 mb-4">46%</h3>
-                <p className="text-2xl text-gray-300">
-                  of small businesses don't have a website
-                </p>
+            <div className="bg-zinc-800/50 rounded-3xl p-8">
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-4xl font-bold text-blue-400 mb-2">46%</h3>
+                  <p className="text-xl text-gray-300">of small businesses don't have a website</p>
+                </div>
+                <div>
+                  <h3 className="text-4xl font-bold text-purple-400 mb-2">71%</h3>
+                  <p className="text-xl text-gray-300">need only 1-10 pages</p>
+                </div>
+                <div>
+                  <h3 className="text-4xl font-bold text-pink-400 mb-2">35%</h3>
+                  <p className="text-xl text-gray-300">feel "too small" for a website</p>
+                </div>
               </div>
-              <div className="mt-8">
-                <p className="text-lg text-gray-400 mb-4">Key reasons:</p>
-                <ul className="space-y-3">
-                  <li className="flex items-center gap-3">
-                    <span className="text-blue-400 font-bold">27%</span>
-                    <span className="text-gray-300">say they don't need one</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="text-blue-400 font-bold">26%</span>
-                    <span className="text-gray-300">rely on social media only</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="text-blue-400 font-bold">14%</span>
-                    <span className="text-gray-300">cite cost as main barrier</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="text-blue-400 font-bold">12%</span>
-                    <span className="text-gray-300">lack technical knowledge</span>
-                  </li>
+            </div>
+
+            {/* Product Market Fit */}
+            <div className="bg-zinc-800/50 rounded-3xl p-8">
+              <h3 className="text-2xl font-semibold mb-6">Our Solution Directly Addresses:</h3>
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-xl font-semibold text-blue-400 mb-2">For the 28% spending under $500:</h4>
+                  <ul className="space-y-2 text-gray-300">
+                    <li>• Premium templates at affordable price points</li>
+                    <li>• Professional quality without professional costs</li>
+                    <li>• Pay-as-you-grow model</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-xl font-semibold text-purple-400 mb-2">For the 71% needing 1-10 pages:</h4>
+                  <ul className="space-y-2 text-gray-300">
+                    <li>• Perfect fit for our template-first approach</li>
+                    <li>• All essential pages pre-designed</li>
+                    <li>• Easy customization for specific needs</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-xl font-semibold text-pink-400 mb-2">For the 35% feeling "too small":</h4>
+                  <ul className="space-y-2 text-gray-300">
+                    <li>• Start with a single, powerful landing page</li>
+                    <li>• Scale only when needed</li>
+                    <li>• Professional appearance regardless of size</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Business Model */}
+          <div className="bg-zinc-800/50 rounded-3xl p-8">
+            <h3 className="text-2xl font-semibold mb-6">Business Model Aligned with Market:</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <ul className="space-y-4 text-gray-300">
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Entry point under $500 to capture price-sensitive segment</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Template-first approach matches real usage patterns</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Scalable pricing that grows with business needs</span>
+                </li>
+              </ul>
+              <div>
+                <p className="text-xl text-gray-300 mb-4">
+                  We're not trying to change the market - we're building exactly what it's asking for:
+                </p>
+                <ul className="space-y-2 text-gray-300">
+                  <li>• Simple but professional</li>
+                  <li>• Affordable but scalable</li>
+                  <li>• Limited pages but maximum impact</li>
                 </ul>
               </div>
             </div>
-
-            <div className="bg-zinc-800/50 rounded-3xl p-8 flex flex-col gap-8">
-              <div>
-                <h3 className="text-4xl font-bold text-purple-400 mb-4">28%</h3>
-                <p className="text-2xl text-gray-300">
-                  spend less than $500 on their website
-                </p>
-              </div>
-              <div>
-                <h3 className="text-4xl font-bold text-purple-400 mb-4">71%</h3>
-                <p className="text-2xl text-gray-300">
-                  need only 1-10 pages
-                </p>
-              </div>
-              <div>
-                <h3 className="text-4xl font-bold text-purple-400 mb-4">35%</h3>
-                <p className="text-2xl text-gray-300">
-                  feel too small for a website
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Market Signal Message */}
-          <div className="text-center mb-16">
-            <p className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-              This isn't a market failure - it's a market signal.
-            </p>
-          </div>
-
-          {/* Sources */}
-          <div className="text-sm text-gray-400 text-center">
-            <p className="mb-2">Sources:</p>
-            <ul className="space-y-1">
-              <li>Top Design Firms' Small Business Survey 2023</li>
-              <li>Zippia's Small Business Digital Presence Report 2023</li>
-            </ul>
           </div>
         </div>
       </section>

@@ -65,20 +65,25 @@ export function ChartWidget({ size = 'medium' }: ChartWidgetProps) {
     setRotation(0)
   }
 
-  // Add size-based scaling
+  // Adjust size-based scaling
   const containerStyle = {
-    small: { transform: 'scale(0.7)' },
-    medium: { transform: 'scale(0.9)' },
-    large: { transform: 'scale(1)' }
+    small: { transform: 'scale(0.8)' },
+    medium: { transform: 'scale(1)' },
+    large: { transform: 'scale(1.2)' }
+  }
+
+  // Adjust chart dimensions based on size
+  const chartDimensions = {
+    small: { innerRadius: 40, outerRadius: 55 },
+    medium: { innerRadius: 50, outerRadius: 70 },
+    large: { innerRadius: 60, outerRadius: 85 }
   }
 
   return (
     <div className="relative w-full h-full perspective-1000" style={containerStyle[size]}>
-      <div 
-        className={`relative transition-transform duration-500 transform-style-preserve-3d h-full ${
-          isFlipped ? 'rotate-y-180' : ''
-        }`}
-      >
+      <div className={`relative transition-transform duration-500 transform-style-preserve-3d h-full ${
+        isFlipped ? 'rotate-y-180' : ''
+      }`}>
         {/* Front side */}
         <Card className="absolute inset-0 bg-[hsl(var(--card))] border-[hsl(var(--border))] backface-hidden">
           <CardHeader className="pb-2">
@@ -100,8 +105,8 @@ export function ChartWidget({ size = 'medium' }: ChartWidgetProps) {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="aspect-square w-full">
+          <CardContent className="flex flex-col h-[calc(100%-100px)]">
+            <div className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -110,8 +115,8 @@ export function ChartWidget({ size = 'medium' }: ChartWidgetProps) {
                     nameKey="browser"
                     cx="50%"
                     cy="50%"
-                    innerRadius={45}
-                    outerRadius={60}
+                    innerRadius={chartDimensions[size].innerRadius}
+                    outerRadius={chartDimensions[size].outerRadius}
                     paddingAngle={5}
                     startAngle={90 + rotation}
                     endAngle={450 + rotation}
@@ -141,7 +146,7 @@ export function ChartWidget({ size = 'medium' }: ChartWidgetProps) {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="h-20 mt-4 grid grid-cols-2 gap-2">
               {chartData.map((entry) => (
                 <div key={entry.browser} className="flex items-center gap-2">
                   <div 
