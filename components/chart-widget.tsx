@@ -28,7 +28,11 @@ const initialChartData: ChartDataItem[] = [
   { browser: "Other", visitors: 190, fill: "hsl(var(--chart-5))" }
 ]
 
-export function ChartWidget() {
+interface ChartWidgetProps {
+  size?: 'small' | 'medium' | 'large';
+}
+
+export function ChartWidget({ size = 'medium' }: ChartWidgetProps) {
   const [isFlipped, setIsFlipped] = React.useState(false)
   const [chartData, setChartData] = React.useState<ChartDataItem[]>(initialChartData)
   const [rotation, setRotation] = React.useState(0)
@@ -61,15 +65,22 @@ export function ChartWidget() {
     setRotation(0)
   }
 
+  // Add size-based scaling
+  const containerStyle = {
+    small: { transform: 'scale(0.7)' },
+    medium: { transform: 'scale(0.9)' },
+    large: { transform: 'scale(1)' }
+  }
+
   return (
-    <div className="relative w-full h-full perspective-1000">
+    <div className="relative w-full h-full perspective-1000" style={containerStyle[size]}>
       <div 
-        className={`relative transition-transform duration-500 transform-style-preserve-3d ${
+        className={`relative transition-transform duration-500 transform-style-preserve-3d h-full ${
           isFlipped ? 'rotate-y-180' : ''
         }`}
       >
         {/* Front side */}
-        <Card className="w-full h-full bg-[hsl(var(--card))] border-[hsl(var(--border))] backface-hidden">
+        <Card className="absolute inset-0 bg-[hsl(var(--card))] border-[hsl(var(--border))] backface-hidden">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-center">
               <div>
@@ -107,7 +118,7 @@ export function ChartWidget() {
                   >
                     <Label
                       content={({ viewBox }) => {
-                        const { cx, cy } = viewBox || { cx: 0, cy: 0 }
+                        const { cx, cy } = viewBox as { cx: number; cy: number }
                         return (
                           <text
                             x={cx}
@@ -153,7 +164,7 @@ export function ChartWidget() {
         </Card>
 
         {/* Back side */}
-        <Card className="w-full h-full bg-[hsl(var(--card))] border-[hsl(var(--border))] absolute top-0 left-0 rotate-y-180 backface-hidden">
+        <Card className="absolute inset-0 bg-[hsl(var(--card))] border-[hsl(var(--border))] rotate-y-180 backface-hidden">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-center">
               <CardTitle className="text-[hsl(var(--card-foreground))]">Edit Chart Data</CardTitle>

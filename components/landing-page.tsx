@@ -361,67 +361,48 @@ export default function MyPage() {
         </div>
       </section>
 
-      {/* Widget Showcase Section - Updated alignment */}
+      {/* Widget Showcase Section */}
       <section className="container mx-auto px-4 py-16">
         <h2 className="text-4xl font-bold mb-12 text-center">Powerful Solutions, One Platform</h2>
         <div className="grid md:grid-cols-3 gap-12">
           <div className="flex flex-col">
-            {/* Widget Container - Increased height */}
-            <div className="h-[400px] bg-zinc-800/50 rounded-3xl p-8 flex items-center justify-center mb-6">
+            {/* Widget Container */}
+            <div className="h-[300px] bg-zinc-800/50 rounded-3xl p-6 mb-6">
               <ClockWidget size="small" showCalendar={false} />
             </div>
             {/* Text Container */}
             <div className="text-center">
               <h3 className="text-2xl font-semibold mb-3">Smart Interactive Widgets</h3>
-              <p className="text-blue-400 font-medium mb-2">
-                Add in one click
-              </p>
-              <p className="text-gray-300">
-                Continue editing as a Pro with full customization options
-              </p>
+              <p className="text-blue-400 font-medium mb-2">Add in one click</p>
+              <p className="text-gray-300">Continue editing as a Pro with full customization options</p>
             </div>
           </div>
 
           <div className="flex flex-col">
-            {/* Widget Container - Increased height */}
-            <div className="h-[400px] bg-zinc-800/50 rounded-3xl p-8 flex items-center justify-center mb-6">
-              <div className="transform scale-110">
-                <PaymentCardWidget size="small" />
-              </div>
+            {/* Widget Container */}
+            <div className="h-[300px] bg-zinc-800/50 rounded-3xl p-6 mb-6">
+              <PaymentCardWidget size="small" />
             </div>
             {/* Text Container */}
             <div className="text-center">
               <h3 className="text-2xl font-semibold mb-3">Seamless Payment Integration</h3>
-              <p className="text-blue-400 font-medium mb-2">
-                Connect payment systems instantly
-              </p>
-              <p className="text-gray-300">
-                Support multiple payment providers and currencies
-              </p>
+              <p className="text-blue-400 font-medium mb-2">Connect payment systems instantly</p>
+              <p className="text-gray-300">Support multiple payment providers and currencies</p>
             </div>
           </div>
 
           <div className="flex flex-col">
-            {/* Widget Container - Increased height */}
-            <div className="h-[400px] bg-zinc-800/50 rounded-3xl p-8 flex items-center justify-center mb-6">
+            {/* Widget Container */}
+            <div className="h-[300px] bg-zinc-800/50 rounded-3xl p-6 mb-6">
               <ChartWidget size="small" />
             </div>
             {/* Text Container */}
             <div className="text-center">
               <h3 className="text-2xl font-semibold mb-3">Business Intelligence Hub</h3>
-              <p className="text-blue-400 font-medium mb-2">
-                Business data analysis & administration
-              </p>
-              <p className="text-gray-300">
-                Including prebuilt sales funnels integration
-              </p>
+              <p className="text-blue-400 font-medium mb-2">Business data analysis & administration</p>
+              <p className="text-gray-300">Including prebuilt sales funnels integration</p>
             </div>
           </div>
-        </div>
-        <div className="text-center mt-12">
-          <p className="text-xl text-gray-300">
-            All modules are enterprise-ready and fully customizable
-          </p>
         </div>
       </section>
 

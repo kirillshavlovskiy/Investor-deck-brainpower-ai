@@ -29,19 +29,38 @@ const colorOptions = {
 }
 
 const fontFamilies = [
-  'System UI, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+  'System UI, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  'SF Pro Display, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+  'SF Pro Text, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
   'Inter, sans-serif',
   'Arial, sans-serif',
   'Helvetica, sans-serif',
+  'Roboto, sans-serif',
+  'Open Sans, sans-serif',
+  'Montserrat, sans-serif',
+  'Poppins, sans-serif',
   'Georgia, serif',
   'Times New Roman, serif',
+  'Playfair Display, serif',
+  'Merriweather, serif',
   'Courier New, monospace',
+  'SF Mono, monospace',
+  'Fira Code, monospace',
+  'JetBrains Mono, monospace',
 ]
 
-const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px', '64px', '96px']
+const fontSizes = [
+  '11px', '12px', '13px', '14px', '15px', '16px', '17px', 
+  '18px', '19px', '20px', '21px', '22px', '23px', '24px',
+  '28px', '32px', '36px', '40px', '44px', '48px', '56px', 
+  '64px', '72px', '80px', '96px', '128px'
+]
 const fontWeights = ['400', '500', '600', '700']
 const letterSpacings = ['-0.05em', '-0.025em', 'normal', '0.025em', '0.05em']
-const lineHeights = ['1', '1.25', '1.5', '1.75', '2']
+const lineHeights = [
+  '1', '1.05', '1.1', '1.15', '1.2', '1.25', '1.3', '1.35', 
+  '1.4', '1.45', '1.47059', '1.5', '1.6', '1.7', '1.75', '2'
+]
 
 // Shadcn Typography Presets
 const shadcnTypography = {
@@ -480,9 +499,9 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
   const [elementOriginalStyles, setElementOriginalStyles] = useState<Map<string, React.CSSProperties>>(new Map());
 
   // Add spacing state
-  const [margin, setMargin] = useState('medium');
-  const [padding, setPadding] = useState('medium');
-  const [gap, setGap] = useState('medium');
+  const [margin, setMargin] = useState<SpacingKey>('medium');
+  const [padding, setPadding] = useState<SpacingKey>('medium');
+  const [gap, setGap] = useState<SpacingKey>('medium');
 
   // Add typography system state
   const [selectedTypographySystem, setSelectedTypographySystem] = useState<keyof typeof typographySystems>('Shadcn');
@@ -817,7 +836,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     }
 
     // Set new selection
-    const element = textElementRefs.current.get(elementId);
+    const element = elementRefs.current.get(elementId);
     if (element === target) {
       // Clear any previous selection
       if (selectedElement && selectedElement !== target) {
@@ -1058,7 +1077,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
   }
 
   // Add handlers
-  const handleWhitespaceChange = (value: string) => {
+  const handleWhitespaceChange = (value: WhitespaceKey) => {
     setWhitespace(value);
     if (selectedElement) {
       selectedElement.style.whiteSpace = value;
@@ -1066,7 +1085,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     }
   }
 
-  const handleTabulationChange = (value: string) => {
+  const handleTabulationChange = (value: TabulationKey) => {
     setTabulation(value);
     if (selectedElement) {
       selectedElement.style.textIndent = spacingPresets.tabulation[value];
@@ -1262,7 +1281,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
               <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
                 <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Typography System</div>
                 <Select 
-                  onValueChange={(value) => setSelectedTypographySystem(value)} 
+                  onValueChange={(value: keyof typeof typographySystems) => setSelectedTypographySystem(value)} 
                   value={selectedTypographySystem}
                 >
                   <SelectTrigger className="w-full">
@@ -1279,7 +1298,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
               <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
                 <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Style Preset</div>
                 <Select 
-                  onValueChange={(value) => applyStylePreset(value)} 
+                  onValueChange={(value: keyof typeof stylePresets) => applyStylePreset(value)} 
                   value={selectedStyle}
                 >
                   <SelectTrigger className="w-full">
@@ -1550,7 +1569,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                 {/* Margin Control */}
                 <div className="mb-2">
                   <label className="text-xs text-zinc-400">Margin</label>
-                  <Select onValueChange={setMargin} value={margin}>
+                  <Select onValueChange={(value: SpacingKey) => setMargin(value)} value={margin}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select margin" />
                     </SelectTrigger>
@@ -1565,7 +1584,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                 {/* Padding Control */}
                 <div className="mb-2">
                   <label className="text-xs text-zinc-400">Padding</label>
-                  <Select onValueChange={setPadding} value={padding}>
+                  <Select onValueChange={(value: SpacingKey) => setPadding(value)} value={padding}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select padding" />
                     </SelectTrigger>
@@ -1580,7 +1599,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                 {/* Gap Control */}
                 <div>
                   <label className="text-xs text-zinc-400">Gap</label>
-                  <Select onValueChange={setGap} value={gap}>
+                  <Select onValueChange={(value: SpacingKey) => setGap(value)} value={gap}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select gap" />
                     </SelectTrigger>
