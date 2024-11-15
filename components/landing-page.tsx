@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { ClockWidget } from './clock-widget'
 import { PaymentCardWidget } from './payment-card-widget'
 import { ChartWidget } from './chart-widget'
-import { X, Play } from 'lucide-react'
-import { Button } from './ui/button'
+import { Play } from 'lucide-react'
 import TextEditorShowcase from './text-editor-showcase'
 import { 
   ShoppingCart, 
@@ -27,24 +26,6 @@ export default function LandingPage() {
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  const codeExamples = {
-    integration: `import { ClockWidget } from '@/components/widgets'
-
-export default function MyPage() {
-  return (
-    <div>
-      <ClockWidget />
-    </div>
-  )
-}`,
-    customization: `<ClockWidget
-  theme="dark"
-  showSeconds={true}
-  size="large"
-  showCalendar={true}
-/>`
   }
 
   return (
@@ -148,7 +129,7 @@ export default function MyPage() {
             The Problem
           </h2>
           <p className="text-3xl text-gray-300 mb-8 leading-relaxed">
-            Despite the digital revolution, <span className="text-purple-400 font-semibold">approximately 40% of small businesses still don't have a website.</span>
+            Despite the digital revolution, <span className="text-purple-400 font-semibold">approximately 40% of small businesses still don&apos;t have a website.</span>
           </p>
           <p className="text-2xl text-gray-300 mb-6">
             Current AI backed solutions are either:
@@ -217,10 +198,10 @@ export default function MyPage() {
           {/* Solution Description */}
           <div className="bg-zinc-800/50 rounded-3xl p-8 mb-16">
             <p className="text-3xl text-blue-400 font-semibold mb-6">
-              'Canva meets Webflow, powered by AI'
+              &apos;Canva meets Webflow, powered by AI&apos;
             </p>
             <p className="text-xl text-gray-300 mb-8">
-              We're positioned to capture the massive shift of small businesses going digital, 
+              We&apos;re positioned to capture the massive shift of small businesses going digital, 
               serving the needs of 400 million small businesses worldwide.
             </p>
           </div>
@@ -350,10 +331,10 @@ export default function MyPage() {
             <div>
               <h3 className="text-2xl font-semibold mb-4">Think of it as:</h3>
               <p className="text-xl text-blue-400 font-semibold mb-6">
-                'Canva meets Webflow, powered by AI'
+                &apos;Canva meets Webflow, powered by AI&apos;
               </p>
               <p className="text-xl text-gray-300">
-                We're positioned to capture the massive shift of small businesses going digital,
+                We&apos;re positioned to capture the massive shift of small businesses going digital,
                 serving the needs of 400 million small businesses worldwide.
               </p>
             </div>
@@ -435,7 +416,7 @@ export default function MyPage() {
               <div className="space-y-8">
                 <div>
                   <h3 className="text-4xl font-bold text-blue-400 mb-2">46%</h3>
-                  <p className="text-xl text-gray-300">of small businesses don't have a website</p>
+                  <p className="text-xl text-gray-300">of small businesses don&apos;t have a website</p>
                 </div>
                 <div>
                   <h3 className="text-4xl font-bold text-purple-400 mb-2">71%</h3>
@@ -443,7 +424,7 @@ export default function MyPage() {
                 </div>
                 <div>
                   <h3 className="text-4xl font-bold text-pink-400 mb-2">35%</h3>
-                  <p className="text-xl text-gray-300">feel "too small" for a website</p>
+                  <p className="text-xl text-gray-300">feel &quot;too small&quot; for a website</p>
                 </div>
               </div>
             </div>
@@ -469,7 +450,7 @@ export default function MyPage() {
                   </ul>
                 </div>
                 <div>
-                  <h4 className="text-xl font-semibold text-pink-400 mb-2">For the 35% feeling "too small":</h4>
+                  <h4 className="text-xl font-semibold text-pink-400 mb-2">For the 35% feeling &quot;too small&quot;:</h4>
                   <ul className="space-y-2 text-gray-300">
                     <li>• Start with a single, powerful landing page</li>
                     <li>• Scale only when needed</li>
@@ -500,7 +481,7 @@ export default function MyPage() {
               </ul>
               <div>
                 <p className="text-xl text-gray-300 mb-4">
-                  We're not trying to change the market - we're building exactly what it's asking for:
+                  We&apos;re not trying to change the market - we&apos;re building exactly what it&apos;s asking for:
                 </p>
                 <ul className="space-y-2 text-gray-300">
                   <li>• Simple but professional</li>
