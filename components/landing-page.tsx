@@ -60,6 +60,18 @@ export default function MyPage() {
               </span>
             </Link>
             <div className="flex items-center gap-6">
+              <Link 
+                href="/how-it-works"
+                className="text-gray-300 hover:text-white transition-colors"
+              >
+                How It Works
+              </Link>
+              <button
+                onClick={() => setShowHowItWorks(true)}
+                className="text-gray-300 hover:text-white transition-colors"
+              >
+                Playground
+              </button>
               <button
                 onClick={() => scrollToSection(problemRef)}
                 className="text-gray-300 hover:text-white transition-colors"
@@ -86,12 +98,6 @@ export default function MyPage() {
               </button>
               <button
                 onClick={() => setShowHowItWorks(true)}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                How It Works
-              </button>
-              <button
-                onClick={() => scrollToSection(problemRef)}
                 className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-full text-sm font-medium transition-colors"
               >
                 Get Started
@@ -118,18 +124,24 @@ export default function MyPage() {
             >
               Get Started
             </button>
-            <button
-              onClick={() => setShowHowItWorks(true)}
+            <Link
+              href="/how-it-works"
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all transform hover:scale-105 flex items-center gap-2"
             >
               <Play className="w-4 h-4" />
-              See how it works
+              How It Works
+            </Link>
+            <button
+              onClick={() => setShowHowItWorks(true)}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all transform hover:scale-105 flex items-center gap-2"
+            >
+              Try Playground
             </button>
           </div>
         </div>
       </section>
 
-      {/* Problem Section - Add ref */}
+      {/* Problem Section */}
       <section ref={problemRef} className="container mx-auto px-4 py-20">
         <div className="bg-zinc-800/50 rounded-3xl p-16 mb-16">
           <h2 className="text-5xl font-bold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
@@ -160,99 +172,140 @@ export default function MyPage() {
             </li>
           </ul>
         </div>
+
+        {/* What Entrepreneurs Need Section */}
+        <div className="bg-zinc-800/50 rounded-3xl p-16">
+          <h2 className="text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+            What Entrepreneurs Need
+          </h2>
+          <ul className="space-y-6 text-xl text-gray-300">
+            <li className="flex items-start gap-4">
+              <span className="text-purple-400 text-2xl">•</span>
+              <span>Price-sensitive segment: Entry point under $500</span>
+            </li>
+            <li className="flex items-start gap-4">
+              <span className="text-purple-400 text-2xl">•</span>
+              <span>Template-first approach matches for non-technical people</span>
+            </li>
+            <li className="flex items-start gap-4">
+              <span className="text-purple-400 text-2xl">•</span>
+              <span>Scalable pricing that grows with business needs. Pay as you go approach</span>
+            </li>
+            <li className="flex items-start gap-4">
+              <span className="text-purple-400 text-2xl">•</span>
+              <span>Website should be simple but professionally developed</span>
+            </li>
+            <li className="flex items-start gap-4">
+              <span className="text-purple-400 text-2xl">•</span>
+              <span>Affordable but scalable to follow business growth</span>
+            </li>
+            <li className="flex items-start gap-4">
+              <span className="text-purple-400 text-2xl">•</span>
+              <span>Limited pages but maximum impact like professionally designed and structured Landing page with call to action and sales funnel integration</span>
+            </li>
+          </ul>
+        </div>
       </section>
 
-      {/* Solutions Section - Add ref */}
-      <section ref={solutionsRef} className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-3 gap-12 items-center">
-          <div>
-            <h2 className="text-4xl font-bold mb-6">Our Solution</h2>
-            <p className="text-xl text-gray-300 mb-8">
-              BrainPower AI is the first AI-powered web development platform specifically designed for entrepreneurs and self-employed professionals. Think of it as 'Canva meets Webflow, powered by AI.'
+      {/* Solution Section */}
+      <section ref={solutionsRef} className="container mx-auto px-4 py-20">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-5xl font-bold mb-12 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+            Our Solution
+          </h2>
+
+          {/* Solution Description */}
+          <div className="bg-zinc-800/50 rounded-3xl p-8 mb-16">
+            <p className="text-3xl text-blue-400 font-semibold mb-6">
+              'Canva meets Webflow, powered by AI'
             </p>
-            <div className="flex justify-center md:justify-start">
-              <button
-                onClick={() => setShowHowItWorks(true)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all transform hover:scale-105 flex items-center gap-2"
-              >
-                <Play className="w-4 h-4" />
-                See how it works
-              </button>
-            </div>
+            <p className="text-xl text-gray-300 mb-8">
+              We're positioned to capture the massive shift of small businesses going digital, 
+              serving the needs of 400 million small businesses worldwide.
+            </p>
           </div>
 
-          <div className="flex justify-center">
-            <ClockWidget />
+          {/* Value Proposition */}
+          <div className="bg-zinc-800/50 rounded-3xl p-8 mb-16">
+            <h3 className="text-2xl font-semibold mb-6">Unlike traditional builders, we offer:</h3>
+            <ul className="space-y-4 text-lg text-gray-300">
+              <li className="flex items-start gap-3">
+                <span className="text-purple-400 text-xl">•</span>
+                <span>Start simple, scale seamlessly with a professional tech stack from day one in a background</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-purple-400 text-xl">•</span>
+                <span>AI-assisted content & design creation based on unique market research capabilities powered by best LLMs</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-purple-400 text-xl">•</span>
+                <span>Integrated business tools & analytics</span>
+              </li>
+            </ul>
           </div>
+          
+          <div className="grid md:grid-cols-2 gap-12 mb-16">
+            {/* PowerPoint-Simple Entry */}
+            <div>
+              <h3 className="text-3xl font-semibold mb-6">PowerPoint-Simple Entry</h3>
+              <ul className="space-y-4 text-lg text-gray-300">
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Edit like PowerPoint, deploy like enterprise</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>AI-powered templates production ready</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Built-in professional design principles: shadcn and MUI UI libraries preinstalled, TailwindCSS and TypeScript based</span>
+                </li>
+              </ul>
+            </div>
 
-          <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md transform hover:scale-105 transition-all duration-300">
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-3xl font-bold text-gray-900">Product Name</h2>
-              <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">New</span>
-            </div>
-            
-            <div className="flex items-center mb-4">
-              {[1, 2, 3, 4, 5].map((_, index) => (
-                <Star key={index} weight="fill" className="w-5 h-5 text-yellow-400" />
-              ))}
-              <span className="text-gray-600 ml-2">5.0 (24 reviews)</span>
-            </div>
-            
-            <p className="text-gray-600 mb-6">Experience unparalleled quality and innovation with our latest product, designed to elevate your everyday life.</p>
-            
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-4xl font-bold text-gray-900">$99.99</span>
-              <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-full flex items-center transition duration-300 ease-in-out transform hover:scale-105">
-                <ShoppingCart weight="bold" className="mr-2" />
-                Add to Cart
-              </button>
-            </div>
-            
-            <div className="border-t border-gray-200 pt-6 space-y-4">
-              <div className="flex items-center">
-                <CreditCard weight="duotone" className="w-6 h-6 text-gray-400 mr-3" />
-                <span className="text-gray-700">Secure payment</span>
-              </div>
-              <div className="flex items-center">
-                <Truck weight="duotone" className="w-6 h-6 text-gray-400 mr-3" />
-                <span className="text-gray-700">Free shipping worldwide</span>
-              </div>
-              <div className="flex items-center">
-                <Phone weight="duotone" className="w-6 h-6 text-gray-400 mr-3" />
-                <span className="text-gray-700">24/7 Dedicated support</span>
-              </div>
-            </div>
-            
-            <div className="mt-8">
-              <a href="#" className="text-blue-600 hover:text-blue-800 font-semibold flex items-center transition duration-300 ease-in-out">
-                Learn more about our product
-                <ArrowRight weight="bold" className="ml-2" />
-              </a>
+            {/* Enterprise Foundation */}
+            <div>
+              <h3 className="text-3xl font-semibold mb-6">Enterprise Foundation</h3>
+              <ul className="space-y-4 text-lg text-gray-300">
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Next.js & React with Docker containerization</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Built-in CRM, Authorization, and payment processing out of the box</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>AI-driven market research, SEO, Copywriting and sales funnel optimization</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Features Section - Add ref */}
+          
+      {/* Diff Features Section - Add ref */}
       <section ref={featuresRef} className="container mx-auto px-4 py-16">
-        <h2 className="text-4xl font-bold mb-12 text-center">Key Features</h2>
+        <h2 className="text-4xl font-bold mb-12 text-center">Key Differentiating Features</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {[
             {
               title: "AI-Driven Design",
-              description: "Create professional landing pages and sales funnels through an intuitive, PowerPoint-like interface"
+              description: "Create professional landing pages and sales funnels through an intuitive, PowerPoint-like interface with AI assistant ready to step in and advise on your design or process flow improvements",
             },
             {
               title: "Enterprise-Grade Technology",
-              description: "Built on Next.js and React, the same technology used by Netflix and Meta"
+              description: "Built on Next.js and React, optimized for SEO and Landing pages - the same technology used by Netflix and Meta"
             },
             {
               title: "Instant Deployment",
-              description: "One-click publishing with automatic scaling"
+              description: "One-click publishing with automatic scaling: no matter how many clients you have or where they are located, we will take care about this optimization"
             },
             {
-              title: "Built-in Revenue Tools",
-              description: "Integrated payment processing and CRM functionality"
+              title: "Plug-in Tools",
+              description: "Integrated payment solution, seamless account opening and CRM integration, everything you need to focus on closing deals with your clients and manage prospect customer pipeline"
             }
           ].map((feature, index) => (
             <div key={index} className="bg-zinc-800/50 rounded-2xl p-6">
@@ -262,12 +315,38 @@ export default function MyPage() {
           ))}
         </div>
       </section>
+      
 
-      {/* Market Section - Add ref */}
-      <section ref={marketRef} className="container mx-auto px-4 py-20 border-t border-zinc-800">
-        <div className="bg-zinc-800/50 rounded-3xl p-12">
-          <h2 className="text-4xl font-bold mb-8">Market Opportunity</h2>
-          <div className="grid md:grid-cols-2 gap-12">
+      {/* Market Opportunity Section - Updated */}
+      <section ref={marketRef} className="container mx-auto px-4 py-20">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-5xl font-bold mb-12 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+            Market Opportunity
+          </h2>
+
+          {/* Market Stats */}
+          <div className="grid md:grid-cols-2 gap-8 mb-16">
+            <div className="bg-zinc-800/50 rounded-3xl p-8">
+              <ul className="space-y-4 text-xl text-gray-300">
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>46% of small businesses potentially need websites</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Growing freelance economy</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Increasing demand for professional web presence</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-purple-400 text-xl">•</span>
+                  <span>Rising cost of traditional web development</span>
+                </li>
+              </ul>
+            </div>
+
             <div>
               <h3 className="text-2xl font-semibold mb-4">Think of it as:</h3>
               <p className="text-xl text-blue-400 font-semibold mb-6">
@@ -276,14 +355,6 @@ export default function MyPage() {
               <p className="text-xl text-gray-300">
                 We're positioned to capture the massive shift of small businesses going digital,
                 serving the needs of 400 million small businesses worldwide.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-2xl font-semibold mb-4">Perfect Timing</h3>
-              <p className="text-xl text-gray-300">
-                The convergence of AI technology and increasing digital demands creates
-                a perfect market opportunity. We're at the forefront of this transformation,
-                making professional web development accessible to everyone.
               </p>
             </div>
           </div>

@@ -88,7 +88,12 @@ function TimePicker({ onTimeSelect, theme = 'dark' }: TimePickerProps) {
   )
 }
 
-export function ClockWidget() {
+interface ClockWidgetProps {
+  size?: 'small' | 'medium' | 'large';
+  showCalendar?: boolean;
+}
+
+export function ClockWidget({ size = 'medium', showCalendar = true }: ClockWidgetProps) {
   const [date, setDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string>('')

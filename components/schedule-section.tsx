@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { ClockWidget } from './clock-widget'
-import { TextEditorShowcase } from './text-editor-showcase'
+import TextEditorShowcase from './text-editor-showcase'
 import { Button } from "@/components/ui/button"
 import { Play } from 'lucide-react'
 

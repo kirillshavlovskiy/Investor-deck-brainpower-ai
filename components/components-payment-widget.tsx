@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { AlertCircle, CheckCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import PricingCards from './PricingCards'
 
 export function PaymentWidget() {
   const [cardNumber, setCardNumber] = useState('')
