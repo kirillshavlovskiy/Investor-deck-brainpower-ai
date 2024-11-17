@@ -1,7 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { cn } from "@/lib/utils"
+import { 
+  typographyPresets, 
+  type TypographyStyle, 
+  dimensionPresets  // Add this import
+} from "@/lib/typography"
 import { 
   AlignLeft, 
   AlignCenter, 
@@ -16,16 +21,90 @@ import {
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { motion } from 'framer-motion';
+import Head from 'next/head';
 
+interface TextEditorShowcaseProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface ElementInfo {
+  type: string;
+  class: string;
+  width: string;
+  height: string;
+  fontSize: string;
+  lineHeight: string;
+  fontWeight: string;
+  letterSpacing: string;
+  whiteSpace: string;
+  wordSpacing?: string;  // Add this
+  rect?: DOMRect;
+  margin: {
+    top: string;
+    right: string;
+    bottom: string;
+    left: string;
+  };
+  padding: {
+    top: string;
+    right: string;
+    bottom: string;
+    left: string;
+  };
+  indent?: {
+    top: string;
+    left: string;
+  };
+}
+
+type WhitespaceKey = 'none' | 'tight' | 'normal' | 'relaxed' | 'loose';
+type TabulationKey = 'none' | 'small' | 'medium' | 'large' | 'xl';
+
+// Add color schemes
+const colorSchemes = {
+  apple: {
+    primary: '#1d1d1f',      // Apple dark gray
+    secondary: '#86868b',    // Apple light gray
+    accent: '#0066CC',       // Apple blue
+    warning: '#ff9f0a',      // Apple orange
+    error: '#ff3b30',        // Apple red
+    success: '#34c759',      // Apple green
+    purple: '#bf5af2',       // Apple purple
+    pink: '#ff375f',         // Apple pink
+    orange: '#f56300',       // Apple orange
+    white: '#ffffff',
+    gray: {
+      100: '#f5f5f7',
+      200: '#e8e8ed',
+      300: '#d2d2d7',
+      400: '#86868b',
+      500: '#6e6e73',
+      600: '#52525b',
+      700: '#3a3a3c',
+      800: '#2c2c2e',
+      900: '#1d1d1f'
+    }
+  }
+}
+
+// Update colorOptions with Apple's color scheme
 const colorOptions = {
-  'text-orange-500': '#f56300',
-  'text-pink-500': '#ff375f',
-  'text-purple-500': '#bf5af2',
-  'text-blue-500': '#0066CC',
-  'text-white': '#FFFFFF',
-  'text-gray-300': '#D1D5DB',
-  'text-gray-500': '#6B7280',
-  'text-zinc-900': '#18181B'
+  'text-primary': colorSchemes.apple.primary,
+  'text-secondary': colorSchemes.apple.secondary,
+  'text-accent': colorSchemes.apple.accent,
+  'text-warning': colorSchemes.apple.warning,
+  'text-error': colorSchemes.apple.error,
+  'text-success': colorSchemes.apple.success,
+  'text-purple': colorSchemes.apple.purple,
+  'text-pink': colorSchemes.apple.pink,
+  'text-orange': colorSchemes.apple.orange,
+  'text-white': colorSchemes.apple.white,
+  'text-gray-400': colorSchemes.apple.gray[400],
+  'text-gray-500': colorSchemes.apple.gray[500],
+  'text-gray-600': colorSchemes.apple.gray[600],
+  'text-gray-900': colorSchemes.apple.gray[900]
 }
 
 const fontFamilies = [
@@ -56,111 +135,28 @@ const fontSizes = [
   '64px', '72px', '80px', '96px', '128px'
 ]
 const fontWeights = ['400', '500', '600', '700']
-const letterSpacings = ['-0.05em', '-0.025em', 'normal', '0.025em', '0.05em']
+const letterSpacings = [
+  '-0.015em',    // Apple main heading
+  '-0.012em',    // Tight
+  '-0.010em',    // Slightly tight
+  '-0.008em',
+  '-0.005em',
+  '-0.003em',    // Apple Display style
+  '-0.002em',
+  '0',           // Normal
+  '0.002em',
+  '0.004em',
+  '0.007em',     // Apple Headline
+  '0.010em',
+  '0.012em',     // Apple Caption
+  '0.015em',     // Loose
+  '0.020em',     // Very loose
+  '0.025em'      // Extra loose
+]
 const lineHeights = [
   '1', '1.05', '1.1', '1.15', '1.2', '1.25', '1.3', '1.35', 
   '1.4', '1.45', '1.47059', '1.5', '1.6', '1.7', '1.75', '2'
 ]
-
-// Shadcn Typography Presets
-const shadcnTypography = {
-  'h1': {
-    className: "scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '48px',
-    fontWeight: '800',
-    letterSpacing: '-0.025em',
-    lineHeight: '1.1',
-  },
-  'h2': {
-    className: "scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '36px',
-    fontWeight: '600',
-    letterSpacing: '-0.025em',
-    lineHeight: '1.2',
-  },
-  'h3': {
-    className: "scroll-m-20 text-2xl font-semibold tracking-tight",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '30px',
-    fontWeight: '600',
-    letterSpacing: '-0.025em',
-    lineHeight: '1.3',
-  },
-  'h4': {
-    className: "scroll-m-20 text-xl font-semibold tracking-tight",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '24px',
-    fontWeight: '600',
-    letterSpacing: '-0.015em',
-    lineHeight: '1.4',
-  },
-  'p': {
-    className: "leading-7 [&:not(:first-child)]:mt-6",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '16px',
-    fontWeight: '400',
-    letterSpacing: 'normal',
-    lineHeight: '1.7',
-  },
-  'blockquote': {
-    className: "mt-6 border-l-2 pl-6 italic",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '16px',
-    fontWeight: '400',
-    letterSpacing: 'normal',
-    lineHeight: '1.7',
-  },
-  'list': {
-    className: "my-6 ml-6 list-disc [&>li]:mt-2",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '16px',
-    fontWeight: '400',
-    letterSpacing: 'normal',
-    lineHeight: '1.7',
-  },
-  'inline-code': {
-    className: "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
-    fontFamily: 'Courier New, monospace',
-    fontSize: '14px',
-    fontWeight: '600',
-    letterSpacing: 'normal',
-    lineHeight: '1.4',
-  },
-  'lead': {
-    className: "text-xl text-muted-foreground",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '20px',
-    fontWeight: '400',
-    letterSpacing: '-0.015em',
-    lineHeight: '1.6',
-  },
-  'large': {
-    className: "text-lg font-semibold",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '18px',
-    fontWeight: '600',
-    letterSpacing: 'normal',
-    lineHeight: '1.6',
-  },
-  'small': {
-    className: "text-sm font-medium leading-none",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '14px',
-    fontWeight: '500',
-    letterSpacing: 'normal',
-    lineHeight: '1',
-  },
-  'muted': {
-    className: "text-sm text-muted-foreground",
-    fontFamily: 'System UI, sans-serif',
-    fontSize: '14px',
-    fontWeight: '400',
-    letterSpacing: 'normal',
-    lineHeight: '1.4',
-  },
-}
 
 // Apple Typography Presets
 const appleTypography = {
@@ -272,7 +268,6 @@ const appleTypography = {
 
 // Combine both for the style presets
 const stylePresets = {
-  ...shadcnTypography,
   ...appleTypography,
 }
 
@@ -282,6 +277,7 @@ const pricingBlocks = [
     price: "$19.95/mo.",
     saveAmount: "$9/mo.",
     description: "with your Business Pro Plan",
+    priceColor: colorSchemes.apple.orange,
     features: [
       { name: "Scalable with your business", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
       { name: "Cloud based", icon: "M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" },
@@ -294,6 +290,7 @@ const pricingBlocks = [
     price: "$25.95/mo.",
     saveAmount: "$11/mo.",
     description: "with your Business Pro Plan",
+    priceColor: colorSchemes.apple.pink,
     features: [
       { name: "Scalable with your business", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
       { name: "Cloud based", icon: "M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" },
@@ -306,6 +303,7 @@ const pricingBlocks = [
     price: "$37.95/mo.",
     saveAmount: "$29/mo.",
     description: "with your Business Pro Plan",
+    priceColor: colorSchemes.apple.purple,
     features: [
       { name: "Scalable with your business", icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" },
       { name: "Cloud based", icon: "M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" },
@@ -318,28 +316,19 @@ const pricingBlocks = [
   priceColor: index === 0 ? '#f56300' : index === 1 ? '#ff375f' : '#bf5af2'
 }))
 
-// Add button presets
+// Helper function for getting typography styles
+const getTypographyStyle = (style: TypographyStyle) => {
+  return typographyPresets.apple[style.toLowerCase() as TypographyStyle];
+}
+
+// Then define button presets using the helper
 const buttonPresets = {
   'Primary': {
     className: "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full transition-all transform hover:scale-105",
-    text: "Get Started"
+    text: "Get Started",
+    typography: getTypographyStyle('cta')
   },
-  'Secondary': {
-    className: "bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-full transition-all transform hover:scale-105",
-    text: "Learn More"
-  },
-  'Outline': {
-    className: "border-2 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white font-semibold rounded-full transition-all transform hover:scale-105",
-    text: "Contact Us"
-  },
-  'Ghost': {
-    className: "text-blue-500 hover:bg-blue-500/10 font-semibold rounded-full transition-all",
-    text: "View Demo"
-  },
-  'Gradient Orange': {
-    className: "bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-semibold rounded-full transition-all transform hover:scale-105",
-    text: "Buy Now"
-  }
+  // ... other button presets
 }
 
 // Add proper types for spacing controls
@@ -369,40 +358,8 @@ const spacingControls: Record<'margin' | 'padding' | 'gap', Record<SpacingKey, s
   }
 }
 
-// Add typographySystems constant
-const typographySystems = {
-  'Shadcn': shadcnTypography,
-  'Apple': appleTypography,
-  'Material Design': {
-    'Display Large': {
-      fontSize: '57px',
-      fontWeight: '400',
-      letterSpacing: '-0.25px',
-      lineHeight: '64px',
-      fontFamily: 'Roboto, sans-serif',
-    },
-    // ... other Material styles
-  },
-  'Tailwind': {
-    '8xl': {
-      fontSize: '96px',
-      fontWeight: '800',
-      letterSpacing: '-0.025em',
-      lineHeight: '1',
-      fontFamily: 'Inter, sans-serif',
-    },
-    // ... other Tailwind styles
-  }
-}
-
-// Add proper types for spacing presets
-type WhitespaceKey = 'none' | 'tight' | 'normal' | 'relaxed' | 'loose';
-type TabulationKey = 'none' | 'small' | 'medium' | 'large' | 'xl';
-
-const spacingPresets: {
-  whitespace: Record<WhitespaceKey, string>;
-  tabulation: Record<TabulationKey, string>;
-} = {
+// Add this with other constants at the top
+const spacingPresets = {
   whitespace: {
     'none': '0',
     'tight': '0.5',
@@ -419,51 +376,57 @@ const spacingPresets: {
   }
 }
 
-// Add default fonts for typography systems
-const systemFonts = {
-  apple: {
-    display: 'SF Pro Display, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-    text: 'SF Pro Text, -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
-  },
-  shadcn: {
-    heading: 'Cal Sans, sans-serif',
-    body: 'Inter, sans-serif'
-  },
-  // ... other system fonts
+// Add position type
+type PositionType = 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky';
+
+// Add interface for InlineControls props
+interface InlineControlsProps {
+  position: { top: number; left: number };
+  onFormatClick: (type: string, value?: string) => void;
 }
 
-// Add default font settings
-const defaultStyles = {
-  fontFamily: systemFonts.apple.display,
-  color: '#1d1d1f'
+// Update InlineControls component
+const InlineControls: React.FC<InlineControlsProps> = ({ position, onFormatClick }) => {
+  return (
+    <div 
+      className="fixed bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-2"
+      style={{
+        top: position.top - 45,
+        left: position.left,
+        zIndex: 1000
+      }}
+    >
+      {/* Existing controls */}
+      
+      {/* Add indent controls */}
+      <div className="flex gap-1 bg-zinc-700/50 rounded-md p-1">
+        <input
+          type="number"
+          min="0"
+          step="4"
+          className="w-16 h-7 px-2 bg-zinc-600/50 rounded text-xs text-white"
+          placeholder="Top"
+          onChange={(e) => onFormatClick('indent-top', `${e.target.value}px`)}
+        />
+        <input
+          type="number"
+          min="0"
+          step="4"
+          className="w-16 h-7 px-2 bg-zinc-600/50 rounded text-xs text-white"
+          placeholder="Left"
+          onChange={(e) => onFormatClick('indent-left', `${e.target.value}px`)}
+        />
+      </div>
+    </div>
+  )
 }
 
-interface TextEditorShowcaseProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-// Add ElementInfo type
-interface ElementInfo {
-  type: string;
-  class: string;
-  width: string;
-  height: string;
-  fontSize: string;
-  lineHeight: string;
-  fontWeight: string;
-  letterSpacing: string;
-  margin: {
-    top: string;
-    right: string;
-    bottom: string;
-    left: string;
-  };
-  padding: {
-    top: string;
-    right: string;
-    bottom: string;
-    left: string;
+// Add debounce utility
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
   };
 }
 
@@ -481,7 +444,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
   const [color, setColor] = useState('#18181B')
   const [buttonText, setButtonText] = useState("Check Out");
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
-  const [selectedStyle, setSelectedStyle] = useState<keyof typeof stylePresets>('Body');
+  const [selectedStyle, setSelectedStyle] = useState<TypographyStyle>('bodyText');
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [selectedButtonStyle, setSelectedButtonStyle] = useState<keyof typeof buttonPresets>('Primary');
@@ -503,15 +466,85 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
   const [padding, setPadding] = useState<SpacingKey>('medium');
   const [gap, setGap] = useState<SpacingKey>('medium');
 
-  // Add typography system state
-  const [selectedTypographySystem, setSelectedTypographySystem] = useState<keyof typeof typographySystems>('Shadcn');
-
   // Add state for whitespace and tabulation
   const [whitespace, setWhitespace] = useState('normal');
   const [tabulation, setTabulation] = useState('none');
 
   // Add elementInfo state
   const [elementInfo, setElementInfo] = useState<ElementInfo | null>(null);
+
+  // Initialize with Apple typography system
+  const [selectedTypographySystem, setSelectedTypographySystem] = useState<'apple'>('apple'); // We're only using Apple system for now
+  
+  // Add dimension state
+  const [selectedDimension, setSelectedDimension] = useState<string>('medium');
+
+  // Add state for inline controls in the main component
+  const [showInlineControls, setShowInlineControls] = useState(false);
+  const [inlineControlsPosition, setInlineControlsPosition] = useState({ top: 0, left: 0 });
+
+  // Add indent state
+  const [textIndent, setTextIndent] = useState({ top: '0px', left: '0px' });
+
+  // Add indent handler
+  const handleIndentChange = (direction: 'top' | 'left', value: string) => {
+    setTextIndent(prev => ({ ...prev, [direction]: value }));
+    if (selectedElement) {
+      if (direction === 'top') {
+        selectedElement.style.marginTop = value;
+      } else {
+        selectedElement.style.textIndent = value;
+      }
+    }
+  }
+
+  // Add to the toolbar controls
+  <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+    <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Text Indent</div>
+    <div className="grid grid-cols-2 gap-2">
+      <div>
+        <label className="text-xs text-zinc-400">Top</label>
+        <input
+          type="text"
+          value={textIndent.top}
+          onChange={(e) => handleIndentChange('top', e.target.value)}
+          className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
+          placeholder="0px"
+        />
+      </div>
+      <div>
+        <label className="text-xs text-zinc-400">Left</label>
+        <input
+          type="text"
+          value={textIndent.left}
+          onChange={(e) => handleIndentChange('left', e.target.value)}
+          className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
+          placeholder="0px"
+        />
+      </div>
+    </div>
+  </div>
+
+  // Add function to apply typography styles
+  const applyStylesToElement = (element: HTMLElement, styles: any) => {
+    Object.assign(element.style, {
+      fontSize: styles.fontSize,
+      fontWeight: styles.fontWeight,
+      letterSpacing: styles.letterSpacing,
+      lineHeight: styles.lineHeight,
+      fontFamily: styles.fontFamily,
+      color: styles.color || color // Use current color if not specified in styles
+    });
+  }
+
+  // Update typography system handler
+  const handleTypographySystemChange = (system: 'apple') => {
+    setSelectedTypographySystem(system);
+    if (selectedElement && selectedElement.dataset.role) {
+      const newStyle = getTypographyStyle(selectedElement.dataset.role as TypographyStyle);
+      applyStylesToElement(selectedElement, newStyle);
+    }
+  }
 
   // Update the style application function
   const applyStyleToSelection = useCallback(() => {
@@ -564,25 +597,27 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     }
   }
 
-  const handleFontSizeChange = (value: string) => {
+  // Update handlers to use debounce and requestAnimationFrame
+  const handleFontSizeChange = debounce((value: string) => {
     setFontSize(value);
     if (selectedElement) {
       selectedElement.style.fontSize = value;
-      selectedElement.focus();
-      const elementId = Array.from(elementRefs.current.entries())
-        .find(([_, el]) => el === selectedElement)?.[0];
-      if (elementId) {
-        setElementStyles(prev => {
-          const updated = new Map(prev);
-          updated.set(elementId, {
-            ...prev.get(elementId),
-            fontSize: value,
+      requestAnimationFrame(() => {
+        const elementId = Array.from(elementRefs.current.entries())
+          .find(([_, el]) => el === selectedElement)?.[0];
+        if (elementId) {
+          setElementStyles(prev => {
+            const updated = new Map(prev);
+            updated.set(elementId, {
+              ...prev.get(elementId),
+              fontSize: value,
+            });
+            return updated;
           });
-          return updated;
-        });
-      }
+        }
+      });
     }
-  }
+  }, 16); // One frame at 60fps
 
   const handleFontWeightChange = (value: string) => {
     setFontWeight(value);
@@ -601,7 +636,22 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
 
   const handleColorChange = (hex: string) => {
     setColor(hex);
-    applyStyleToSelection();
+    if (selectedElement) {
+      selectedElement.style.color = hex;
+      // Store the updated style
+      const elementId = Array.from(elementRefs.current.entries())
+        .find(([_, el]) => el === selectedElement)?.[0];
+      if (elementId) {
+        setElementStyles(prev => {
+          const updated = new Map(prev);
+          updated.set(elementId, {
+            ...prev.get(elementId),
+            color: hex,
+          });
+          return updated;
+        });
+      }
+    }
   }
 
   // Add this function to render the element info and spacing indicators
@@ -683,7 +733,8 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
   };
 
   // Update the renderEditableText function
-  const renderEditableText = (content: string, className: string, elementId: string, style?: React.CSSProperties) => {
+  const renderEditableText = (content: string, className: string, elementId: string, typographyStyle: keyof typeof typographyPresets.apple, styleOverrides?: React.CSSProperties) => {
+    const baseStyles = typographyPresets.apple[typographyStyle];
     return (
       <div className="relative group">
         <span
@@ -695,121 +746,219 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
           contentEditable
           suppressContentEditableWarning
           className={cn(
+            baseStyles.className,
             className, 
-            "outline-none focus:outline-none relative transition-opacity duration-200",
-            selectedElement && selectedElement !== elementRefs.current.get(elementId) && "opacity-30"
+            "outline-none focus:outline-none"
           )}
           style={{
-            ...style,
-            ...elementStyles.get(elementId),
+            ...baseStyles,
+            ...styleOverrides,
+            position: position,
+            color: elementStyles.get(elementId)?.color || baseStyles.color,
+            fontFamily: baseStyles.fontFamily
           }}
-          onClick={(e) => {
-            e.stopPropagation();
-            const target = e.target as HTMLElement;
-            setSelectedElement(target);
-            updateToolbarState(target);
+          data-typography={typographyStyle}
+          onMouseDown={(e) => {
+            // Only handle initial selection, not cursor movement
+            if (selectedElement !== e.currentTarget) {
+              e.stopPropagation();
+              const target = e.currentTarget;
+              
+              setSelectedElement(target);
+              updateToolbarState(target);
+              handleTextSelection(target);
+              
+              // Update elementInfo only on initial selection
+              const computedStyle = window.getComputedStyle(target);
+              const rect = target.getBoundingClientRect();
+              
+              setElementInfo({
+                // ... elementInfo updates
+              });
+              
+              setColor(computedStyle.color);
+            }
           }}
         >
           {content}
         </span>
 
-        {selectedElement === elementRefs.current.get(elementId) && (
+        {selectedElement === elementRefs.current.get(elementId) && elementInfo && (
           <>
-            {/* Element info */}
-            <div className="absolute -top-20 left-0 bg-blue-500/10 text-blue-500 text-xs px-2 py-1 rounded-md flex flex-col gap-1 z-50">
-              <div>
-                {elementId} - {elementInfo?.width} × {elementInfo?.height}
+            {/* Info block - updated styling */}
+            <div 
+              className="fixed bg-slate-100/60 backdrop-blur-md text-slate-900 text-xs px-3 py-2 flex flex-col gap-1.5 shadow-sm rounded-sm border border-slate-200/30"
+              style={{
+                top: elementInfo.rect?.top - 140 + 'px',
+                left: elementInfo.rect?.left + 'px',
+                zIndex: 1000 // High but below sidebar
+              }}
+            >
+              <div className="font-medium text-slate-800">
+                {elementInfo.type}.{elementId} - {elementInfo.width} × {elementInfo.height}
               </div>
-              <div className="text-xs text-blue-400">
-                Font: {elementInfo?.fontSize} / {elementInfo?.fontWeight} / {elementInfo?.lineHeight}
+              <div className="text-slate-700">
+                Typography: {typographyStyle}
               </div>
-              <div className="text-xs text-blue-400">
+              <div className="text-slate-700">
+                Position: {position}
+              </div>
+              <div className="text-slate-700">
+                White-space: {elementInfo.whiteSpace} / Word-spacing: {elementInfo.wordSpacing || 'normal'}
+              </div>
+              <div className="text-slate-700">
+                Coordinates: x:{elementInfo.rect?.left.toFixed(0)}px y:{elementInfo.rect?.top.toFixed(0)}px
+              </div>
+              <div className="text-slate-700">
                 Classes: {className}
               </div>
+              <div className="text-slate-700">
+                Indent: top {elementInfo.indent?.top || '0px'} / left {elementInfo.indent?.left || '0px'}
+              </div>
             </div>
 
-            {/* Blue nodes at midpoints */}
-            <div className="absolute top-0 left-1/2 w-2 h-2 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 left-1/2 w-2 h-2 bg-blue-500 rounded-full -translate-x-1/2 translate-y-1/2" />
-            <div className="absolute left-0 top-1/2 w-2 h-2 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute right-0 top-1/2 w-2 h-2 bg-blue-500 rounded-full translate-x-1/2 -translate-y-1/2" />
+            {/* Extended alignment guidelines */}
+            <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 900 }}>
+              {/* Horizontal guidelines - extended */}
+              <div className="absolute left-[-9999px] right-[-9999px] top-0 border-t border-red-500/30" />
+              <div className="absolute left-[-9999px] right-[-9999px] bottom-0 border-t border-red-500/30" />
+              
+              {/* Vertical guidelines - extended */}
+              <div className="absolute top-[-9999px] bottom-[-9999px] left-0 border-l border-red-500/30" />
+              <div className="absolute top-[-9999px] bottom-[-9999px] right-0 border-l border-red-500/30" />
 
-            {/* Extended red alignment lines */}
-            <div className="absolute border-t border-red-500/20 pointer-events-none"
-              style={{
-                top: 0,
-                left: '-100vw',
-                right: '-100vw',
-              }}
-            />
-            <div className="absolute border-b border-red-500/20 pointer-events-none"
-              style={{
-                bottom: 0,
-                left: '-100vw',
-                right: '-100vw',
-              }}
-            />
-            <div className="absolute border-l border-red-500/20 pointer-events-none h-screen"
-              style={{
-                left: 0,
-                top: '-50vh',
-                bottom: '-50vh',
-              }}
-            />
-            <div className="absolute border-r border-red-500/20 pointer-events-none h-screen"
-              style={{
-                right: 0,
-                top: '-50vh',
-                bottom: '-50vh',
-              }}
-            />
+              {/* Center guidelines - extended */}
+              <div className="absolute left-1/2 top-[-9999px] bottom-[-9999px] border-l border-red-500/30" />
+              <div className="absolute top-1/2 left-[-9999px] right-[-9999px] border-t border-red-500/30" />
 
-            {/* Spacing values */}
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs text-red-500">
-              {elementInfo?.margin.top}
+              {/* Spacing indicators */}
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-red-500">
+                0px
+              </div>
+              <div className="absolute -left-6 top-1/2 -translate-y-1/2 text-[10px] text-red-500">
+                0px
+              </div>
+              <div className="absolute -right-6 top-1/2 -translate-y-1/2 text-[10px] text-red-500">
+                0px
+              </div>
+              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-red-500">
+                0px
+              </div>
             </div>
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-xs text-red-500">
-              {elementInfo?.margin.bottom}
-            </div>
-            <div className="absolute -left-4 top-1/2 -translate-y-1/2 text-xs text-red-500">
-              {elementInfo?.margin.left}
-            </div>
-            <div className="absolute -right-4 top-1/2 -translate-y-1/2 text-xs text-red-500">
-              {elementInfo?.margin.right}
-            </div>
+
+            {/* Small blue dots at corners and midpoints */}
+            <div className="absolute top-0 left-0 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
+            <div className="absolute top-0 right-0 w-1 h-1 bg-blue-500 rounded-full translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
+            <div className="absolute bottom-0 left-0 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 translate-y-1/2" style={{ zIndex: 901 }} />
+            <div className="absolute bottom-0 right-0 w-1 h-1 bg-blue-500 rounded-full translate-x-1/2 translate-y-1/2" style={{ zIndex: 901 }} />
+            <div className="absolute top-0 left-1/2 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
+            <div className="absolute bottom-0 left-1/2 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 translate-y-1/2" style={{ zIndex: 901 }} />
+            <div className="absolute left-0 top-1/2 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
+            <div className="absolute right-0 top-1/2 w-1 h-1 bg-blue-500 rounded-full translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
           </>
         )}
       </div>
     );
   };
 
-  const updateToolbarState = (element: HTMLElement) => {
-    const computedStyle = window.getComputedStyle(element);
-    setFontFamily(computedStyle.fontFamily);
-    setFontSize(computedStyle.fontSize);
-    setFontWeight(computedStyle.fontWeight);
-    setLetterSpacing(computedStyle.letterSpacing);
-    setLineHeight(computedStyle.lineHeight);
-    setTextAlign(computedStyle.textAlign as 'left' | 'center' | 'right' | 'justify');
-    setColor(computedStyle.color);
-    setIsBold(computedStyle.fontWeight === 'bold' || parseInt(computedStyle.fontWeight) >= 700);
-    setIsItalic(computedStyle.fontStyle === 'italic');
-    setIsUnderline(computedStyle.textDecoration.includes('underline'));
+  // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
 
-    // Determine the selected style based on the computed style
-    const matchingStyle = Object.entries(stylePresets).find(([_, preset]) => 
-      preset.fontSize === computedStyle.fontSize &&
-      preset.fontWeight === computedStyle.fontWeight &&
-      preset.letterSpacing === computedStyle.letterSpacing &&
-      preset.lineHeight === computedStyle.lineHeight &&
-      preset.fontFamily === computedStyle.fontFamily
-    );
-    if (matchingStyle) {
-      setSelectedStyle(matchingStyle[0] as keyof typeof stylePresets);
-    } else {
-      setSelectedStyle('Body'); // Default to Body if no match found
-    }
-  }
+  // Fix the memoized typography styles
+  const memoizedTypographyStyles = useMemo(() => {
+    return Object.entries(typographyPresets.apple).map(([style, preset]) => ({
+      style,
+      preset
+    }));
+  }, []); // Remove the extra closing bracket and parenthesis
+
+  // Debounce style updates
+  const debouncedStyleUpdate = useCallback(
+    debounce((element: HTMLElement, styles: any) => {
+      requestAnimationFrame(() => {
+        Object.assign(element.style, styles);
+      });
+    }, 16),
+    []
+  );
+
+  // Optimize updateToolbarState
+  const updateToolbarState = useCallback((element: HTMLElement) => {
+    setIsLoading(true);
+    requestAnimationFrame(() => {
+      const computedStyle = window.getComputedStyle(element);
+      const typographyStyle = element.getAttribute('data-typography');
+      
+      if (typographyStyle && typographyStyle in typographyPresets.apple) {
+        const preset = typographyPresets.apple[typographyStyle as TypographyStyle];
+        
+        // Batch state updates
+        batch(() => {
+          setFontFamily(preset.fontFamily);
+          setFontSize(preset.fontSize);
+          setFontWeight(preset.fontWeight);
+          setLetterSpacing(preset.letterSpacing);
+          setLineHeight(preset.lineHeight);
+          setColor(preset.color);
+          setSelectedStyle(typographyStyle as TypographyStyle);
+          setPosition(computedStyle.position as PositionType);
+        });
+      }
+      setIsLoading(false);
+    });
+  }, []);
+
+  // Optimize element selection
+  const handleElementSelection = useCallback((element: HTMLElement) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+    
+    setSelectedElement(element);
+    
+    // Defer non-critical updates
+    requestAnimationFrame(() => {
+      updateToolbarState(element);
+      
+      const computedStyle = window.getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      
+      setElementInfo({
+        // ... element info updates
+      });
+    });
+  }, [updateToolbarState]);
+
+  // Add loading indicator to toolbar
+  <div className="w-72 bg-zinc-800 p-4 rounded-lg shadow-lg h-full overflow-y-auto ml-4">
+    {isLoading ? (
+      <div className="flex items-center justify-center h-12">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+      </div>
+    ) : (
+      // Toolbar content
+    )}
+  </div>
+
+  // Optimize style application
+  const applyStylesToElement = useCallback((element: HTMLElement, styles: any) => {
+    debouncedStyleUpdate(element, styles);
+  }, [debouncedStyleUpdate]);
+
+  // Cache element refs
+  const elementRefsCache = useMemo(() => new Map(), []);
+
+  // Optimize renderEditableText
+  const renderEditableText = useCallback((
+    content: string, 
+    className: string, 
+    elementId: string, 
+    typographyStyle: keyof typeof typographyPresets.apple, 
+    styleOverrides?: React.CSSProperties
+  ) => {
+    const baseStyles = useMemo(() => typographyPresets.apple[typographyStyle], [typographyStyle]);
+    
+    // ... rest of renderEditableText
+  }, [selectedElement, elementInfo]);
 
   const handleToolbarAction = (e: React.MouseEvent) => {
     // Prevent losing selection when clicking toolbar
@@ -821,31 +970,27 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     applyStyleToSelection();
   }, [applyStyleToSelection]);
 
-  const handleTextSelection = (event: React.MouseEvent, elementId: string) => {
-    event.stopPropagation();
-    const target = event.target as HTMLElement;
-    
-    // Clear all other selections first
-    setSelectedCard(null);
-    setSelectedButton(null);
-    
-    // If clicking on already selected element, unselect it
-    if (selectedElement === target) {
-      setSelectedElement(null);
-      return;
-    }
-
-    // Set new selection
-    const element = elementRefs.current.get(elementId);
-    if (element === target) {
-      // Clear any previous selection
-      if (selectedElement && selectedElement !== target) {
-        setSelectedElement(null);
-      }
-      setSelectedElement(target);
-      updateToolbarState(target);
+  // Update the click handler to show controls for text object selection
+  const handleTextSelection = (element: HTMLElement) => {
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      setInlineControlsPosition({
+        top: rect.top + window.scrollY,
+        left: rect.left + window.scrollX
+      });
+      setShowInlineControls(true);
+    } else {
+      setShowInlineControls(false);
     }
   }
+
+  // Add event listeners
+  useEffect(() => {
+    document.addEventListener('selectionchange', handleTextSelection);
+    return () => {
+      document.removeEventListener('selectionchange', handleTextSelection);
+    }
+  }, []);
 
   const handleButtonClick = (event: React.MouseEvent, buttonId: string) => {
     event.stopPropagation();
@@ -867,9 +1012,10 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     event.stopPropagation();
     const target = event.target as HTMLElement;
     
-    // Clear all other selections first
-    setSelectedElement(null);
-    setSelectedButton(null);
+    // If clicking on text inside card, don't select the card
+    if (target.hasAttribute('contenteditable')) {
+      return;
+    }
     
     // If clicking on already selected card, unselect it
     if (selectedCard === index) {
@@ -877,15 +1023,17 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
       return;
     }
     
-    // Only select card if clicking on the container itself
-    if (target.classList.contains('pricing-card')) {
-      setSelectedCard(index);
-    }
+    // Clear text selection when selecting card
+    setSelectedElement(null);
+    setSelectedButton(null);
+    setSelectedCard(index);
   }
 
-  // Add click handler for the main container to clear selections when clicking outside
+  // Update handleContainerClick to handle global clicks
   const handleContainerClick = (event: React.MouseEvent) => {
     const target = event.target as HTMLElement;
+    
+    // Only clear selections if clicking on the container itself
     if (target.classList.contains('editor-container')) {
       setSelectedCard(null);
       setSelectedElement(null);
@@ -1092,13 +1240,170 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     }
   }
 
+  // Initialize typography styles on component mount
+  useEffect(() => {
+    // Apply Apple typography system styles to all text elements
+    const applyInitialStyles = () => {
+      // Apply to hero text
+      const heroText = elementRefs.current.get('welcome-text-hero');
+      if (heroText) {
+        applyStylesToElement(heroText, getTypographyStyle('mainHeading'));
+      }
+
+      // Apply to subtitle
+      const subtitleText = elementRefs.current.get('welcome-text-subtitle');
+      if (subtitleText) {
+        applyStylesToElement(subtitleText, getTypographyStyle('bodyText'));
+      }
+
+      // Apply to pricing cards
+      pricingBlocks.forEach((_, index) => {
+        const titleEl = elementRefs.current.get(`title-card-${index}-offer`);
+        if (titleEl) {
+          applyStylesToElement(titleEl, getTypographyStyle('subtitle'));
+        }
+
+        const priceEl = elementRefs.current.get(`price-card-${index}-amount`);
+        if (priceEl) {
+          applyStylesToElement(priceEl, getTypographyStyle('title'));
+        }
+
+        const descEl = elementRefs.current.get(`description-card-${index}-save`);
+        if (descEl) {
+          applyStylesToElement(descEl, getTypographyStyle('description'));
+        }
+      });
+    };
+
+    applyInitialStyles();
+  }, []);
+
+  // Move position state inside component
+  const [position, setPosition] = useState<PositionType>('relative');
+  
+  // Update position handler
+  const handlePositionChange = (value: PositionType) => {
+    setPosition(value);
+    if (selectedElement) {
+      selectedElement.style.position = value;
+      // Reset coordinates when changing position type
+      if (value === 'static' || value === 'relative') {
+        selectedElement.style.top = 'auto';
+        selectedElement.style.left = 'auto';
+      }
+    }
+  }
+
+  // Add resize state
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStartPosition, setResizeStartPosition] = useState({ x: 0, y: 0 });
+  const [elementStartSize, setElementStartSize] = useState({ width: 0, height: 0 });
+
+  // Add resize handlers
+  const handleResizeStart = (e: React.MouseEvent, direction: string) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeStartPosition({ x: e.clientX, y: e.clientY });
+    
+    if (selectedElement) {
+      const rect = selectedElement.getBoundingClientRect();
+      setElementStartSize({ width: rect.width, height: rect.height });
+    }
+  };
+
+  const handleResizeMove = (e: MouseEvent) => {
+    if (!isResizing || !selectedElement) return;
+
+    const deltaX = e.clientX - resizeStartPosition.x;
+    const deltaY = e.clientY - resizeStartPosition.y;
+
+    selectedElement.style.width = `${elementStartSize.width + deltaX}px`;
+    selectedElement.style.height = `${elementStartSize.height + deltaY}px`;
+  };
+
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+  };
+
+  // Add event listeners for resize
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', handleResizeMove);
+      window.addEventListener('mouseup', handleResizeEnd);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleResizeMove);
+      window.removeEventListener('mouseup', handleResizeEnd);
+    };
+  }, [isResizing]);
+
+  // Update dimension preset handler
+  const handleDimensionPresetChange = (value: string) => {
+    // Prevent default behavior that might cause unselection
+    event?.preventDefault();
+    event?.stopPropagation();
+    
+    setSelectedDimension(value);
+    
+    if (selectedElement) {
+      // Get typography style from the element
+      const typographyStyle = selectedElement.getAttribute('data-typography') as keyof typeof dimensionPresets;
+      
+      if (typographyStyle && dimensionPresets[typographyStyle]) {
+        const preset = dimensionPresets[typographyStyle][value as 'narrow' | 'medium' | 'wide'];
+        
+        if (preset) {
+          // Apply styles directly
+          selectedElement.style.maxWidth = preset.maxWidth;
+          if (preset.ratio) {
+            selectedElement.style.aspectRatio = preset.ratio;
+          }
+          
+          // Update className without losing existing classes
+          const existingClasses = selectedElement.className
+            .split(' ')
+            .filter(cls => !cls.includes('max-w-') && !cls.includes('aspect-'));
+          
+          selectedElement.className = cn(
+            ...existingClasses,
+            preset.className
+          );
+          
+          // Force a rerender to update the UI
+          setElementStyles(prev => new Map(prev));
+        }
+      }
+    }
+  }
+
+  const handleControlChange = (handler: Function) => (value: any) => {
+    // Prevent event propagation
+    event?.preventDefault();
+    event?.stopPropagation();
+    
+    // Call the actual handler
+    handler(value);
+    
+    // Use requestAnimationFrame for better performance
+    requestAnimationFrame(() => {
+      setElementStyles(prev => new Map(prev));
+    });
+  }
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50">
+      <Head>
+        <title>Brainpower AI Playground</title>
+        <meta name="description" content="Explore Brainpower AI Playground" />
+        <meta name="keywords" content="Brainpower AI, AI, Playground" />
+        <meta name="author" content="Brainpower AI" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
       <div className="h-screen w-screen flex items-center justify-center">
         <div 
-          className="bg-slate-200 w-full h-full p-4 relative editor-container"
+          className="bg-slate-200 w-full h-full p-4 relative editor-container flex"
           onClick={handleContainerClick}
         >
           {/* Close Button */}
@@ -1109,46 +1414,180 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
             <X className="w-6 h-6" />
           </button>
 
-          {/* Content */}
-          <div className="h-full w-full flex flex-row gap-4">
-            {/* Pricing Cards */}
-            <div className="flex-1 flex flex-col">
-              {/* Welcome text at top with margin */}
-              <div className="mb-8 text-center space-y-4">
-                {renderEditableText(
-                  "Welcome to Brainpower AI Playground",
-                  "text-[96px] font-bold leading-tight",
-                  "welcome-text-hero",
-                  { 
-                    fontFamily: systemFonts.apple.display,
-                    marginBottom: '1.5rem', // 24px
-                    letterSpacing: '-0.003em',
-                    color: '#1d1d1f',
-                    padding: '0.5rem' // Add padding to show outline
-                  }
-                )}
-                {renderEditableText(
-                  "Your creative journey starts here: design, build, and prototype with ease",
-                  "text-[28px] font-normal leading-[1.25]",
-                  "welcome-text-subtitle",
-                  { 
-                    fontFamily: systemFonts.apple.display,
-                    letterSpacing: '-0.015em',
-                    marginBottom: '1rem', // 16px
-                    color: '#1d1d1f',
-                    padding: '0.5rem' // Add padding to show outline
-                  }
-                )}
+          {/* Content - Make this section scrollable */}
+          <div className="flex-1 overflow-y-auto pr-4">
+            <div className="flex flex-col">
+              {/* Header with sticky positioning */}
+              <div className="sticky top-0 z-[1000] bg-slate-800/40 backdrop-blur-md border-b border-slate-700/30">
+                <div className="container mx-auto px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    {/* Logo */}
+                    {renderEditableText(
+                      "Brainpower AI",
+                      "text-slate-200",
+                      "header-text-logo",
+                      'mainHeading',
+                      {
+                        fontSize: '24px',
+                        fontWeight: '600',
+                        letterSpacing: '-0.015em',
+                        color: 'hsl(210 40% 98%)',
+                        marginBottom: '0',
+                        position: 'relative',
+                        zIndex: 1
+                      }
+                    )}
+
+                    {/* Navigation Menu */}
+                    <nav className="hidden md:flex items-center gap-8">
+                      {[
+                        { text: "Features", href: "#features" },
+                        { text: "Pricing", href: "#pricing" },
+                        { text: "About", href: "#about" },
+                        { text: "Contact", href: "#contact" }
+                      ].map((item, index) => (
+                        <a
+                          key={index}
+                          href={item.href}
+                          className={cn(
+                            typographyPresets.apple.body.className,
+                            "text-slate-200 hover:text-white transition-colors"
+                          )}
+                          data-typography="body"
+                        >
+                          {item.text}
+                        </a>
+                      ))}
+                    </nav>
+
+                    {/* CTA Button */}
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={cn(
+                        typographyPresets.apple.cta.className,
+                        "px-6 py-2 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700"
+                      )}
+                    >
+                      Get Started
+                    </motion.button>
+                  </div>
+                </div>
               </div>
 
-              {/* Cards container moved up */}
-              <div 
+              {/* Hero Section with Motion */}
+              <motion.section
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1 }}
+                className="min-h-[70vh] flex flex-col items-center justify-center mb-24"
+              >
+                {/* Hero Content */}
+                <div className="text-center space-y-6 max-w-4xl mx-auto">
+                  {renderEditableText(
+                    "Welcome to Brainpower AI Playground",
+                    typographyPresets.apple.mainHeading.className,
+                    "welcome-text-hero",
+                    'mainHeading'
+                  )}
+                  
+                  {renderEditableText(
+                    "Your creative journey starts here",
+                    typographyPresets.apple.bodyText.className,
+                    "welcome-text-subtitle",
+                    'bodyText'
+                  )}
+
+                  {renderEditableText(
+                    "Design, build, and prototype with ease...",
+                    typographyPresets.apple.description.className,
+                    "welcome-text-description",
+                    'description'
+                  )}
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={cn(
+                      typographyPresets.apple.cta.className,
+                      "px-8 py-4 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 mt-8"
+                    )}
+                  >
+                    Get Started Now
+                  </motion.button>
+                </div>
+              </motion.section>
+
+              {/* Features Section */}
+              <motion.section
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="py-24"
+              >
+                <div className="text-center mb-16">
+                  {renderEditableText(
+                    "Why Choose Brainpower AI",
+                    typographyPresets.apple.heading.className,
+                    "features-heading",
+                    'heading'
+                  )}
+                </div>
+
+                {/* Features Grid */}
+                <div className="grid md:grid-cols-3 gap-10 mb-24">
+                  {[
+                    {
+                      icon: "🚀",
+                      title: "Lightning Fast",
+                      description: "Experience blazing fast performance with our optimized platform"
+                    },
+                    {
+                      icon: "🎯",
+                      title: "Precision Control",
+                      description: "Fine-tune every aspect of your design with pixel-perfect precision"
+                    },
+                    {
+                      icon: "🔄",
+                      title: "Real-time Updates",
+                      description: "See changes instantly as you edit and customize your design"
+                    }
+                  ].map((feature, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.2 }}
+                      className="feature-card p-6 bg-white rounded-xl shadow-lg"
+                    >
+                      <div className="text-4xl mb-4">{feature.icon}</div>
+                      {renderEditableText(
+                        feature.title,
+                        typographyPresets.apple.subtitle.className,
+                        `feature-title-${index}`,
+                        'subtitle'
+                      )}
+                      {renderEditableText(
+                        feature.description,
+                        typographyPresets.apple.body.className,
+                        `feature-desc-${index}`,
+                        'body'
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.section>
+
+              {/* Pricing Cards Section */}
+              <motion.div 
                 className="flex flex-row gap-4" 
                 ref={cardsRef}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
                 style={{
-                  height: '420px',
                   gap: spacingControls.gap[gap],
-                  marginTop: '2rem' // Add some space after text blocks
+                  marginTop: '2rem'
                 }}
               >
                 {pricingBlocks.map((block, index) => (
@@ -1168,23 +1607,26 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                         <div className="flex flex-col gap-4">
                           {renderEditableText(
                             `This is your ${block.title} Offer`,
-                            "text-[36px] font-semibold text-zinc-900 leading-tight",
-                            `title-card-${index}-offer`
+                            typographyPresets.apple.subtitle.className,  // Using predefined Tailwind classes
+                            `title-card-${index}-offer`,
+                            'subtitle'
                           )}
                           
                           {renderEditableText(
                             block.price,
-                            "text-[36px] font-semibold leading-tight",
+                            typographyPresets.apple.title.className,  // Using predefined Tailwind classes
                             `price-card-${index}-amount`,
+                            'title',
                             { color: block.priceColor }
                           )}
                         </div>
 
                         <div className="flex flex-col gap-4">
                           {renderEditableText(
-                            `Save ${block.saveAmount} ${block.description} and receive:`,
-                            "text-[21px] text-zinc-900",
-                            `description-card-${index}-save`
+                            `Save ${block.saveAmount} ${block.description}`,
+                            typographyPresets.apple.description.className,  // Using predefined Tailwind classes
+                            `description-card-${index}-save`,
+                            'description'
                           )}
 
                           <div className="flex flex-col gap-3">
@@ -1196,7 +1638,8 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                                 <span
                                   contentEditable
                                   suppressContentEditableWarning
-                                  className="text-[17px] text-zinc-900"
+                                  className={typographyPresets.apple.body.className}  // Using predefined Tailwind classes
+                                  data-typography="body"
                                 >
                                   {feature.name}
                                 </span>
@@ -1209,16 +1652,19 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                           <span
                             contentEditable
                             suppressContentEditableWarning
-                            className="text-[17px] text-zinc-900"
+                            className={typographyPresets.apple.body.className}  // Using predefined Tailwind classes
+                            data-typography="body"
                           >
                             Have a question? Call a Specialist or chat online.
                           </span>
                           
                           <a
                             href="#"
-                            contentEditable
-                            suppressContentEditableWarning
-                            className="text-[17px] text-blue-500 hover:underline"
+                            className={cn(
+                              typographyPresets.apple.link.className,  // Using predefined Tailwind classes
+                              "hover:underline"
+                            )}
+                            data-typography="link"
                           >
                             Contact us &gt;
                           </a>
@@ -1229,9 +1675,11 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                             {renderOutline(`button-${index}`)}
                             <button 
                               className={cn(
+                                typographyPresets.apple.cta.className,  // Using predefined Tailwind classes
                                 "w-full py-3 px-4",
                                 buttonPresets[selectedButtonStyle].className
                               )}
+                              data-typography="cta"
                             >
                               {buttonPresets[selectedButtonStyle].text}
                             </button>
@@ -1248,9 +1696,11 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                           {renderOutline(`button-${index}`)}
                           <button 
                             className={cn(
+                              typographyPresets.apple.cta.className,  // Using predefined Tailwind classes
                               "w-full py-3 px-4",
                               buttonPresets[selectedButtonStyle].className
                             )}
+                            data-typography="cta"
                           >
                             {buttonPresets[selectedButtonStyle].text}
                           </button>
@@ -1259,401 +1709,470 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                     </div>
                   </div>
                 ))}
-              </div>
+              </motion.div>
             </div>
+          </div>
 
-            {/* Control Bar - Fixed to right side */}
-            <div 
-              className="w-72 bg-zinc-800 p-4 rounded-lg shadow-lg overflow-y-auto h-full"
-              onClick={handleToolbarClick}
-              onMouseDown={(e) => {
-                // Prevent mousedown from stealing focus and clearing selection
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onMouseUp={(e) => {
-                // Prevent mouseup from clearing selection
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              {/* Style Preset */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Typography System</div>
-                <Select 
-                  onValueChange={(value: keyof typeof typographySystems) => setSelectedTypographySystem(value)} 
-                  value={selectedTypographySystem}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select typography system" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(typographySystems).map((system) => (
-                      <SelectItem key={system} value={system}>{system}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          {/* Control Bar */}
+          <div 
+            className="w-72 bg-zinc-800 p-4 rounded-lg shadow-lg h-full overflow-y-auto ml-4" 
+            style={{ zIndex: 1100 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center h-12">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
               </div>
-
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Style Preset</div>
-                <Select 
-                  onValueChange={(value: keyof typeof stylePresets) => applyStylePreset(value)} 
-                  value={selectedStyle}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(typographySystems[selectedTypographySystem]).map(([style, preset]) => (
-                      <SelectItem key={style} value={style}>
-                        {style} ({preset.fontSize})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Font Family */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Font Family</div>
-                <Select onValueChange={handleFontFamilyChange} value={fontFamily}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a font" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fontFamilies.map((font) => (
-                      <SelectItem key={font} value={font}>{font.split(',')[0]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Font Size */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Font Size</div>
-                <Select onValueChange={handleFontSizeChange} value={fontSize}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select font size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fontSizes.map((size) => (
-                      <SelectItem key={size} value={size}>{size}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Font Weight */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Font Weight</div>
-                <Select onValueChange={handleFontWeightChange} value={fontWeight}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select font weight" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fontWeights.map((weight) => (
-                      <SelectItem key={weight} value={weight}>{weight}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Letter Spacing */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Letter Spacing</div>
-                <Select onValueChange={handleLetterSpacingChange} value={letterSpacing}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select letter spacing" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {letterSpacings.map((spacing) => (
-                      <SelectItem key={spacing} value={spacing}>{spacing}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Line Height */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Line Height</div>
-                <Select onValueChange={handleLineHeightChange} value={lineHeight}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select line height" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {lineHeights.map((height) => (
-                      <SelectItem key={height} value={height}>{height}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Text Style */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Text Style</div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsBold(!isBold)}
-                    className={cn("text-zinc-300 hover:text-white transition-colors", isBold && "bg-zinc-600 text-white")}
+            ) : (
+              <>
+                {/* Always show Typography System and Style Preset */}
+                <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                  <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Typography System</div>
+                  <Select 
+                    onValueChange={handleControlChange(handleDimensionPresetChange)}
+                    value={selectedDimension}
+                    onOpenChange={(open) => {
+                      // Prevent unselection when opening/closing the select
+                      event?.stopPropagation();
+                    }}
                   >
-                    <Bold className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsItalic(!isItalic)}
-                    className={cn("text-zinc-300 hover:text-white transition-colors", isItalic && "bg-zinc-600 text-white")}
-                  >
-                    <Italic className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsUnderline(!isUnderline)}
-                    className={cn("text-zinc-300 hover:text-white transition-colors", isUnderline && "bg-zinc-600 text-white")}
-                  >
-                    <Underline className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Alignment Controls */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Alignment</div>
-                <div className="flex gap-1">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleTextAlign('left')}
-                          className={cn("text-zinc-300 hover:text-white transition-colors", textAlign === 'left' && "bg-zinc-600 text-white")}
-                        >
-                          <AlignLeft className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Align Left</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleTextAlign('center')}
-                          className={cn("text-zinc-300 hover:text-white transition-colors", textAlign === 'center' && "bg-zinc-600 text-white")}
-                        >
-                          <AlignCenter className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Align Center</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleTextAlign('right')}
-                          className={cn("text-zinc-300 hover:text-white transition-colors", textAlign === 'right' && "bg-zinc-600 text-white")}
-                        >
-                          <AlignRight className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Align Right</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleTextAlign('justify')}
-                          className={cn("text-zinc-300 hover:text-white transition-colors", textAlign === 'justify' && "bg-zinc-600 text-white")}
-                        >
-                          <AlignJustify className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Justify</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-
-              {/* Button Text Editor */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Button Text</div>
-                <input
-                  type="text"
-                  value={buttonText}
-                  onChange={(e) => setButtonText(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
-                />
-              </div>
-
-              {/* Color Selector */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Text Color</div>
-                <div className="grid grid-cols-4 gap-2">
-                  {Object.entries(colorOptions).map(([className, hex]) => (
-                    <TooltipProvider key={className}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            onClick={() => handleColorChange(hex)}
-                            className={cn(
-                              "w-8 h-8 rounded-full border border-zinc-600 hover:scale-110 transition-all duration-200 ease-in-out",
-                              color === hex && "ring-2 ring-white"
-                            )}
-                            style={{ backgroundColor: hex }}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{className.replace('text-', '').replace('-', ' ')}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
-                </div>
-              </div>
-
-              {/* Button Style Selector */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Button Style</div>
-                <Select 
-                  onValueChange={(value) => setSelectedButtonStyle(value as keyof typeof buttonPresets)} 
-                  value={selectedButtonStyle}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select button style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(buttonPresets).map((style) => (
-                      <SelectItem key={style} value={style}>{style}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {/* Button Preview */}
-                <div className="mt-3 p-3 bg-zinc-800 rounded-lg">
-                  <button 
-                    className={cn(
-                      "w-full py-2 px-4",
-                      buttonPresets[selectedButtonStyle].className
-                    )}
-                  >
-                    {buttonPresets[selectedButtonStyle].text}
-                  </button>
-                </div>
-              </div>
-
-              {/* Add Spacing Controls to toolbar */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Spacing</div>
-                
-                {/* Margin Control */}
-                <div className="mb-2">
-                  <label className="text-xs text-zinc-400">Margin</label>
-                  <Select onValueChange={(value: SpacingKey) => setMargin(value)} value={margin}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select margin" />
+                      <SelectValue placeholder="Select dimension" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(spacingControls.margin).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>{key} ({value})</SelectItem>
-                      ))}
+                      <SelectItem value="narrow">Narrow</SelectItem>
+                      <SelectItem value="medium">Medium (Recommended)</SelectItem>
+                      <SelectItem value="wide">Wide</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Padding Control */}
-                <div className="mb-2">
-                  <label className="text-xs text-zinc-400">Padding</label>
-                  <Select onValueChange={(value: SpacingKey) => setPadding(value)} value={padding}>
+                {/* Add this after Typography System selector in the Control Bar */}
+                <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                  <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Style Preset</div>
+                  <Select 
+                    onValueChange={handleControlChange(applyStylePreset)} 
+                    value={selectedStyle}
+                  >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select padding" />
+                      <SelectValue placeholder="Select style" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(spacingControls.padding).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>{key} ({value})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Gap Control */}
-                <div>
-                  <label className="text-xs text-zinc-400">Gap</label>
-                  <Select onValueChange={(value: SpacingKey) => setGap(value)} value={gap}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select gap" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(spacingControls.gap).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>{key} ({value})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Text Spacing Controls */}
-              <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
-                <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Text Spacing</div>
-                
-                {/* Whitespace Control */}
-                <div className="mb-2">
-                  <label className="text-xs text-zinc-400">Word Spacing</label>
-                  <Select onValueChange={handleWhitespaceChange} value={whitespace}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select word spacing" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(spacingPresets.whitespace).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>
-                          {key} ({value}em)
+                      {Object.entries(typographyPresets.apple).map(([style, preset]) => (
+                        <SelectItem key={style} value={style as TypographyStyle}>
+                          {style} ({preset.fontSize})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Tabulation Control */}
-                <div>
-                  <label className="text-xs text-zinc-400">Text Indent</label>
-                  <Select onValueChange={handleTabulationChange} value={tabulation}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select text indent" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(spacingPresets.tabulation).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>
-                          {key} ({value})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Text Controls - Only show for text elements */}
+                {selectedElement.hasAttribute('contenteditable') && (
+                  <>
+                    {/* Font Family */}
+                    <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                      <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Font Family</div>
+                      <Select onValueChange={handleControlChange(handleFontFamilyChange)} value={fontFamily}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a font" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fontFamilies.map((font) => (
+                            <SelectItem key={font} value={font}>{font.split(',')[0]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Font Size */}
+                    <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                      <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Font Size</div>
+                      <Select onValueChange={handleControlChange(handleFontSizeChange)} value={fontSize}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select font size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fontSizes.map((size) => (
+                            <SelectItem key={size} value={size}>{size}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Font Weight */}
+                    <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                      <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Font Weight</div>
+                      <Select onValueChange={handleControlChange(handleFontWeightChange)} value={fontWeight}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select font weight" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fontWeights.map((weight) => (
+                            <SelectItem key={weight} value={weight}>{weight}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Text Alignment */}
+                    <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                      <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Alignment</div>
+                      <div className="flex gap-1">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleTextAlign('left')}
+                                className={cn("text-zinc-300 hover:text-white transition-colors", textAlign === 'left' && "bg-zinc-600 text-white")}
+                              >
+                                <AlignLeft className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Align Left</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleTextAlign('center')}
+                                className={cn("text-zinc-300 hover:text-white transition-colors", textAlign === 'center' && "bg-zinc-600 text-white")}
+                              >
+                                <AlignCenter className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Align Center</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleTextAlign('right')}
+                                className={cn("text-zinc-300 hover:text-white transition-colors", textAlign === 'right' && "bg-zinc-600 text-white")}
+                              >
+                                <AlignRight className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Align Right</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleTextAlign('justify')}
+                                className={cn("text-zinc-300 hover:text-white transition-colors", textAlign === 'justify' && "bg-zinc-600 text-white")}
+                              >
+                                <AlignJustify className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Justify</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </div>
+
+                    {/* Letter Spacing */}
+                    <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                      <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Letter Spacing</div>
+                      <Select onValueChange={handleControlChange(handleLetterSpacingChange)} value={letterSpacing}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select letter spacing" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {letterSpacings.map((spacing) => (
+                            <SelectItem key={spacing} value={spacing}>{spacing}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Line Height */}
+                    <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                      <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Line Height</div>
+                      <Select onValueChange={handleControlChange(handleLineHeightChange)} value={lineHeight}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select line height" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {lineHeights.map((height) => (
+                            <SelectItem key={height} value={height}>{height}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+
+                {/* Button Controls - Only show for buttons */}
+                {selectedElement.tagName.toLowerCase() === 'button' && (
+                  <>
+                    {/* Button Text */}
+                    <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                      <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Button Text</div>
+                      <input
+                        type="text"
+                        value={buttonText}
+                        onChange={(e) => setButtonText(e.target.value)}
+                        className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
+                      />
+                    </div>
+
+                    {/* Button Style */}
+                    <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                      <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Button Style</div>
+                      <Select 
+                        onValueChange={handleControlChange((value) => setSelectedButtonStyle(value as keyof typeof buttonPresets))} 
+                        value={selectedButtonStyle}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select button style" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.keys(buttonPresets).map((style) => (
+                            <SelectItem key={style} value={style}>{style}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      {/* Button Preview */}
+                      <div className="mt-3 p-3 bg-zinc-800 rounded-lg">
+                        <button 
+                          className={cn(
+                            "w-full py-2 px-4",
+                            buttonPresets[selectedButtonStyle].className
+                          )}
+                          style={getTypographyStyle('cta')}
+                          data-typography="cta"
+                        >
+                          {buttonPresets[selectedButtonStyle].text}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Spacing Controls - Show for all elements */}
+                <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                  <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Spacing</div>
+                  
+                  {/* Margin Control */}
+                  <div className="mb-2">
+                    <label className="text-xs text-zinc-400">Margin</label>
+                    <Select onValueChange={handleControlChange((value) => setMargin(value))} value={margin}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select margin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(spacingControls.margin).map(([key, value]) => (
+                          <SelectItem key={key} value={key}>{key} ({value})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Padding Control */}
+                  <div className="mb-2">
+                    <label className="text-xs text-zinc-400">Padding</label>
+                    <Select onValueChange={handleControlChange((value) => setPadding(value))} value={padding}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select padding" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(spacingControls.padding).map(([key, value]) => (
+                          <SelectItem key={key} value={key}>{key} ({value})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Gap Control */}
+                  <div>
+                    <label className="text-xs text-zinc-400">Gap</label>
+                    <Select onValueChange={handleControlChange((value) => setGap(value))} value={gap}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select gap" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(spacingControls.gap).map(([key, value]) => (
+                          <SelectItem key={key} value={key}>{key} ({value})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+
+                {/* Color Controls - Show for all elements */}
+                <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600">
+                  <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Text Color</div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Object.entries(colorOptions).map(([className, hex]) => (
+                      <TooltipProvider key={className}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleColorChange(hex)}
+                              className={cn(
+                                "w-8 h-8 rounded-full border border-zinc-600 hover:scale-110 transition-all duration-200 ease-in-out",
+                                color === hex && "ring-2 ring-white"
+                              )}
+                              style={{ backgroundColor: hex }}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{className.replace('text-', '').replace('-', ' ')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Add Sizing Controls to toolbar */}
+                <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
+                  <div className="text-xs text-zinc-400 uppercase mb-2 font-semibold">Size & Position</div>
+                  
+                  {/* Width */}
+                  <div className="mb-2">
+                    <label className="text-xs text-zinc-400">Width</label>
+                    <input
+                      type="text"
+                      value={selectedElement?.style.width || 'auto'}
+                      onChange={(e) => {
+                        if (selectedElement) {
+                          selectedElement.style.width = e.target.value;
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
+                    />
+                  </div>
+
+                  {/* Height */}
+                  <div className="mb-2">
+                    <label className="text-xs text-zinc-400">Height</label>
+                    <input
+                      type="text"
+                      value={selectedElement?.style.height || 'auto'}
+                      onChange={(e) => {
+                        if (selectedElement) {
+                          selectedElement.style.height = e.target.value;
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
+                    />
+                  </div>
+
+                  {/* Position */}
+                  <div className="mb-2">
+                    <label className="text-xs text-zinc-400">Position</label>
+                    <Select 
+                      onValueChange={handleControlChange(handlePositionChange)} 
+                      value={position}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select position" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="static">Static</SelectItem>
+                        <SelectItem value="relative">Relative</SelectItem>
+                        <SelectItem value="absolute">Absolute</SelectItem>
+                        <SelectItem value="fixed">Fixed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Coordinates for absolute/fixed positioning */}
+                  {(position === 'absolute' || position === 'fixed') && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-zinc-400">Top</label>
+                        <input
+                          type="text"
+                          value={selectedElement?.style.top || '0px'}
+                          onChange={(e) => {
+                            if (selectedElement) {
+                              selectedElement.style.top = e.target.value;
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-zinc-400">Left</label>
+                        <input
+                          type="text"
+                          value={selectedElement?.style.left || '0px'}
+                          onChange={(e) => {
+                            if (selectedElement) {
+                              selectedElement.style.left = e.target.value;
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Show message when no element is selected */}
+            {!selectedElement && (
+              <div className="text-zinc-400 text-center p-4">
+                Select an element to edit its properties
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
+      {showInlineControls && (
+        <InlineControls 
+          position={inlineControlsPosition}
+          onFormatClick={(type, value) => {
+            switch(type) {
+              case 'bold':
+                document.execCommand('bold', false);
+                break;
+              case 'italic':
+                document.execCommand('italic', false);
+                break;
+              case 'underline':
+                document.execCommand('underline', false);
+                break;
+              case 'style':
+                // Apply typography style to selection
+                const selection = window.getSelection();
+                if (selection && !selection.isCollapsed) {
+                  const range = selection.getRangeAt(0);
+                  const span = document.createElement('span');
+                  const style = typographyPresets.apple[value];
+                  Object.assign(span.style, style);
+                  span.dataset.typography = value;
+                  range.surroundContents(span);
+                }
+                break;
+            }
+          }}
+        />
+      )}
     </div>
   )
 }
