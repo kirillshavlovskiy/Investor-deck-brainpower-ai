@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { cn } from "@/lib/utils"
 import { 
   typographyPresets, 
@@ -23,6 +23,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { motion } from 'framer-motion';
 import Head from 'next/head';
+import { handleTextSelection } from '@/lib/text-selection';
+import { EditorToolbar } from '@/components/editor-toolbar';
 
 interface TextEditorShowcaseProps {
   isOpen: boolean;
@@ -381,7 +383,7 @@ type PositionType = 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky';
 
 // Add interface for InlineControls props
 interface InlineControlsProps {
-  position: { top: number; left: number };
+  position: { top: number; left: number; right: number; bottom: number };
   onFormatClick: (type: string, value?: string) => void;
 }
 
@@ -391,31 +393,85 @@ const InlineControls: React.FC<InlineControlsProps> = ({ position, onFormatClick
     <div 
       className="fixed bg-zinc-800/90 backdrop-blur-sm rounded-lg shadow-lg px-2 py-1.5 flex items-center gap-2"
       style={{
-        top: position.top - 45,
+        top: position.bottom + 12,
         left: position.left,
+        transform: 'translateY(0)',
         zIndex: 1000
       }}
     >
-      {/* Existing controls */}
-      
-      {/* Add indent controls */}
-      <div className="flex gap-1 bg-zinc-700/50 rounded-md p-1">
-        <input
-          type="number"
-          min="0"
-          step="4"
-          className="w-16 h-7 px-2 bg-zinc-600/50 rounded text-xs text-white"
-          placeholder="Top"
-          onChange={(e) => onFormatClick('indent-top', `${e.target.value}px`)}
-        />
-        <input
-          type="number"
-          min="0"
-          step="4"
-          className="w-16 h-7 px-2 bg-zinc-600/50 rounded text-xs text-white"
-          placeholder="Left"
-          onChange={(e) => onFormatClick('indent-left', `${e.target.value}px`)}
-        />
+      {/* Text Alignment */}
+      <div className="flex gap-0.5 bg-zinc-700/50 rounded-md p-0.5">
+        <button className="p-1 hover:bg-zinc-600/50 rounded" onClick={() => onFormatClick('align', 'left')}>
+          <AlignLeft className="h-3 w-3 text-zinc-200" />
+        </button>
+        <button className="p-1 hover:bg-zinc-600/50 rounded" onClick={() => onFormatClick('align', 'center')}>
+          <AlignCenter className="h-3 w-3 text-zinc-200" />
+        </button>
+        <button className="p-1 hover:bg-zinc-600/50 rounded" onClick={() => onFormatClick('align', 'right')}>
+          <AlignRight className="h-3 w-3 text-zinc-200" />
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-4 bg-zinc-600" />
+
+      {/* First Line Indent Controls */}
+      <div className="flex items-center gap-1 bg-zinc-700/50 rounded-md p-1">
+        <button 
+          className="p-1 hover:bg-zinc-600/50 rounded text-xs text-zinc-200 w-6 h-6 flex items-center justify-center"
+          onClick={() => onFormatClick('firstLineIndent', 'decrease')}
+        >
+          -
+        </button>
+        <span className="text-xs text-zinc-300 w-16 text-center">First Line</span>
+        <button 
+          className="p-1 hover:bg-zinc-600/50 rounded text-xs text-zinc-200 w-6 h-6 flex items-center justify-center"
+          onClick={() => onFormatClick('firstLineIndent', 'increase')}
+        >
+          +
+        </button>
+      </div>
+
+      {/* Block Indent Controls */}
+      <div className="flex items-center gap-1 bg-zinc-700/50 rounded-md p-1">
+        <button 
+          className="p-1 hover:bg-zinc-600/50 rounded text-xs text-zinc-200 w-6 h-6 flex items-center justify-center"
+          onClick={() => onFormatClick('blockIndent', 'decrease')}
+        >
+          -
+        </button>
+        <span className="text-xs text-zinc-300 w-16 text-center">Block</span>
+        <button 
+          className="p-1 hover:bg-zinc-600/50 rounded text-xs text-zinc-200 w-6 h-6 flex items-center justify-center"
+          onClick={() => onFormatClick('blockIndent', 'increase')}
+        >
+          +
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-4 bg-zinc-600" />
+
+      {/* Vertical Alignment */}
+      <div className="flex items-center gap-1 bg-zinc-700/50 rounded-md p-1">
+        <button 
+          className="p-1 hover:bg-zinc-600/50 rounded text-xs text-zinc-200"
+          onClick={() => onFormatClick('verticalAlign', 'top')}
+        >
+          Top
+        </button>
+        <button 
+          className="p-1 hover:bg-zinc-600/50 rounded text-xs text-zinc-200"
+          onClick={() => onFormatClick('verticalAlign', 'center')}
+        >
+          Center
+        </button>
+        <button 
+          className="p-1 hover:bg-zinc-600/50 rounded text-xs text-zinc-200"
+          onClick={() => onFormatClick('verticalAlign', 'bottom')}
+        >
+          Bottom
+        </button>
       </div>
     </div>
   )
@@ -429,6 +485,111 @@ const debounce = (func: Function, wait: number) => {
     timeout = setTimeout(() => func(...args), wait);
   };
 }
+
+// Update QuickControls component
+const QuickControls = ({ selectedElement }: { selectedElement: HTMLElement | null }) => {
+  if (!selectedElement) return null;
+
+  const rect = selectedElement.getBoundingClientRect();
+
+  return (
+    <div 
+      className="fixed flex items-center gap-2 bg-zinc-800/90 backdrop-blur-sm rounded-lg p-2 shadow-lg z-[1001]"
+      style={{
+        top: rect.top - 48, // Position 48px above the element
+        right: window.innerWidth - rect.right, // Align with right edge of element
+        transform: 'translateY(0)',
+      }}
+    >
+      {/* Alignment Controls */}
+      <div className="flex gap-0.5 bg-zinc-700/50 rounded-md p-0.5">
+        <button 
+          className="p-1.5 hover:bg-zinc-600/50 rounded text-zinc-200 hover:text-white transition-colors"
+          onClick={() => {
+            if (selectedElement) {
+              selectedElement.style.textAlign = 'left';
+            }
+          }}
+        >
+          <AlignLeft className="h-4 w-4" />
+        </button>
+        <button 
+          className="p-1.5 hover:bg-zinc-600/50 rounded text-zinc-200 hover:text-white transition-colors"
+          onClick={() => {
+            if (selectedElement) {
+              selectedElement.style.textAlign = 'center';
+            }
+          }}
+        >
+          <AlignCenter className="h-4 w-4" />
+        </button>
+        <button 
+          className="p-1.5 hover:bg-zinc-600/50 rounded text-zinc-200 hover:text-white transition-colors"
+          onClick={() => {
+            if (selectedElement) {
+              selectedElement.style.textAlign = 'right';
+            }
+          }}
+        >
+          <AlignRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Position Controls */}
+      <Select
+        defaultValue="relative"
+        onValueChange={(value) => {
+          if (selectedElement) {
+            selectedElement.style.position = value;
+          }
+        }}
+      >
+        <SelectTrigger className="h-8 w-24 text-xs bg-zinc-700/50">
+          <SelectValue placeholder="Position" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="static">Static</SelectItem>
+          <SelectItem value="relative">Relative</SelectItem>
+          <SelectItem value="absolute">Absolute</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* Dimension Preset */}
+      <Select
+        defaultValue="medium"
+        onValueChange={(value) => {
+          if (selectedElement) {
+            const typographyStyle = selectedElement.getAttribute('data-typography') as keyof typeof dimensionPresets;
+            if (typographyStyle && dimensionPresets[typographyStyle]) {
+              const preset = dimensionPresets[typographyStyle][value as 'narrow' | 'medium' | 'wide'];
+              if (preset) {
+                selectedElement.style.maxWidth = preset.maxWidth;
+                if (preset.ratio) {
+                  selectedElement.style.aspectRatio = preset.ratio;
+                }
+                selectedElement.className = cn(
+                  selectedElement.className.split(' ').filter(cls => 
+                    !cls.includes('max-w-') && !cls.includes('aspect-')
+                  ).join(' '),
+                  preset.className
+                );
+              }
+            }
+          }
+        }}
+      >
+        <SelectTrigger className="h-8 w-24 text-xs bg-zinc-700/50">
+          <SelectValue placeholder="Width" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="narrow">Narrow</SelectItem>
+          <SelectItem value="medium">Medium</SelectItem>
+          <SelectItem value="wide">Wide</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
 
 export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowcaseProps) {
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
@@ -481,7 +642,7 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
 
   // Add state for inline controls in the main component
   const [showInlineControls, setShowInlineControls] = useState(false);
-  const [inlineControlsPosition, setInlineControlsPosition] = useState({ top: 0, left: 0 });
+  const [inlineControlsPosition, setInlineControlsPosition] = useState({ top: 0, left: 0, right: 0, bottom: 0 });
 
   // Add indent state
   const [textIndent, setTextIndent] = useState({ top: '0px', left: '0px' });
@@ -732,9 +893,10 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     return null;
   };
 
-  // Update the renderEditableText function
+  // Update renderEditableText function
   const renderEditableText = (content: string, className: string, elementId: string, typographyStyle: keyof typeof typographyPresets.apple, styleOverrides?: React.CSSProperties) => {
     const baseStyles = typographyPresets.apple[typographyStyle];
+    
     return (
       <div className="relative group">
         <span
@@ -758,207 +920,152 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
             fontFamily: baseStyles.fontFamily
           }}
           data-typography={typographyStyle}
-          onMouseDown={(e) => {
-            // Only handle initial selection, not cursor movement
-            if (selectedElement !== e.currentTarget) {
-              e.stopPropagation();
-              const target = e.currentTarget;
-              
-              setSelectedElement(target);
-              updateToolbarState(target);
-              handleTextSelection(target);
-              
-              // Update elementInfo only on initial selection
-              const computedStyle = window.getComputedStyle(target);
-              const rect = target.getBoundingClientRect();
-              
-              setElementInfo({
-                // ... elementInfo updates
-              });
-              
-              setColor(computedStyle.color);
-            }
+          onClick={(e) => {
+            e.stopPropagation();
+            const target = e.currentTarget;
+            
+            // Set selection
+            setSelectedElement(target);
+            
+            // Update element info
+            const computedStyle = window.getComputedStyle(target);
+            const rect = target.getBoundingClientRect();
+            
+            setElementInfo({
+              type: target.tagName.toLowerCase(),
+              class: target.className,
+              width: `${Math.round(rect.width)}px`,
+              height: `${Math.round(rect.height)}px`,
+              fontSize: computedStyle.fontSize,
+              lineHeight: computedStyle.lineHeight,
+              fontWeight: computedStyle.fontWeight,
+              letterSpacing: computedStyle.letterSpacing,
+              whiteSpace: computedStyle.whiteSpace,
+              wordSpacing: computedStyle.wordSpacing,
+              rect: rect,
+              margin: {
+                top: computedStyle.marginTop,
+                right: computedStyle.marginRight,
+                bottom: computedStyle.marginBottom,
+                left: computedStyle.marginLeft,
+              },
+              padding: {
+                top: computedStyle.paddingTop,
+                right: computedStyle.paddingRight,
+                bottom: computedStyle.paddingBottom,
+                left: computedStyle.paddingLeft,
+              },
+              indent: {
+                top: computedStyle.marginTop,
+                left: computedStyle.textIndent,
+              },
+            });
+            
+            // Update toolbar state
+            updateToolbarState(target);
           }}
         >
           {content}
         </span>
 
+        {/* Selection outline and info */}
         {selectedElement === elementRefs.current.get(elementId) && elementInfo && (
           <>
-            {/* Info block - updated styling */}
-            <div 
-              className="fixed bg-slate-100/60 backdrop-blur-md text-slate-900 text-xs px-3 py-2 flex flex-col gap-1.5 shadow-sm rounded-sm border border-slate-200/30"
-              style={{
-                top: elementInfo.rect?.top - 140 + 'px',
-                left: elementInfo.rect?.left + 'px',
-                zIndex: 1000 // High but below sidebar
-              }}
-            >
-              <div className="font-medium text-slate-800">
-                {elementInfo.type}.{elementId} - {elementInfo.width} × {elementInfo.height}
-              </div>
-              <div className="text-slate-700">
-                Typography: {typographyStyle}
-              </div>
-              <div className="text-slate-700">
-                Position: {position}
-              </div>
-              <div className="text-slate-700">
-                White-space: {elementInfo.whiteSpace} / Word-spacing: {elementInfo.wordSpacing || 'normal'}
-              </div>
-              <div className="text-slate-700">
-                Coordinates: x:{elementInfo.rect?.left.toFixed(0)}px y:{elementInfo.rect?.top.toFixed(0)}px
-              </div>
-              <div className="text-slate-700">
-                Classes: {className}
-              </div>
-              <div className="text-slate-700">
-                Indent: top {elementInfo.indent?.top || '0px'} / left {elementInfo.indent?.left || '0px'}
-              </div>
-            </div>
-
             {/* Extended alignment guidelines */}
             <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 900 }}>
-              {/* Horizontal guidelines - extended */}
+              {/* Horizontal guidelines */}
               <div className="absolute left-[-9999px] right-[-9999px] top-0 border-t border-red-500/30" />
               <div className="absolute left-[-9999px] right-[-9999px] bottom-0 border-t border-red-500/30" />
               
-              {/* Vertical guidelines - extended */}
+              {/* Vertical guidelines */}
               <div className="absolute top-[-9999px] bottom-[-9999px] left-0 border-l border-red-500/30" />
               <div className="absolute top-[-9999px] bottom-[-9999px] right-0 border-l border-red-500/30" />
 
-              {/* Center guidelines - extended */}
+              {/* Center guidelines */}
               <div className="absolute left-1/2 top-[-9999px] bottom-[-9999px] border-l border-red-500/30" />
               <div className="absolute top-1/2 left-[-9999px] right-[-9999px] border-t border-red-500/30" />
-
-              {/* Spacing indicators */}
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-red-500">
-                0px
-              </div>
-              <div className="absolute -left-6 top-1/2 -translate-y-1/2 text-[10px] text-red-500">
-                0px
-              </div>
-              <div className="absolute -right-6 top-1/2 -translate-y-1/2 text-[10px] text-red-500">
-                0px
-              </div>
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-red-500">
-                0px
-              </div>
             </div>
 
-            {/* Small blue dots at corners and midpoints */}
+            {/* Blue corner dots */}
             <div className="absolute top-0 left-0 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
             <div className="absolute top-0 right-0 w-1 h-1 bg-blue-500 rounded-full translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
             <div className="absolute bottom-0 left-0 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 translate-y-1/2" style={{ zIndex: 901 }} />
             <div className="absolute bottom-0 right-0 w-1 h-1 bg-blue-500 rounded-full translate-x-1/2 translate-y-1/2" style={{ zIndex: 901 }} />
-            <div className="absolute top-0 left-1/2 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
-            <div className="absolute bottom-0 left-1/2 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 translate-y-1/2" style={{ zIndex: 901 }} />
-            <div className="absolute left-0 top-1/2 w-1 h-1 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
-            <div className="absolute right-0 top-1/2 w-1 h-1 bg-blue-500 rounded-full translate-x-1/2 -translate-y-1/2" style={{ zIndex: 901 }} />
           </>
         )}
       </div>
     );
   };
 
-  // Add loading state
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Fix the memoized typography styles
-  const memoizedTypographyStyles = useMemo(() => {
-    return Object.entries(typographyPresets.apple).map(([style, preset]) => ({
-      style,
-      preset
-    }));
-  }, []); // Remove the extra closing bracket and parenthesis
-
-  // Debounce style updates
-  const debouncedStyleUpdate = useCallback(
-    debounce((element: HTMLElement, styles: any) => {
-      requestAnimationFrame(() => {
-        Object.assign(element.style, styles);
-      });
-    }, 16),
-    []
-  );
-
-  // Optimize updateToolbarState
-  const updateToolbarState = useCallback((element: HTMLElement) => {
-    setIsLoading(true);
-    requestAnimationFrame(() => {
-      const computedStyle = window.getComputedStyle(element);
-      const typographyStyle = element.getAttribute('data-typography');
+  const updateToolbarState = (element: HTMLElement) => {
+    const computedStyle = window.getComputedStyle(element);
+    
+    // Get the typography style from data attribute first
+    const typographyStyle = element.getAttribute('data-typography');
+    
+    if (typographyStyle && typographyStyle in typographyPresets.apple) {
+      // If we have a data-typography attribute, use it directly
+      const preset = typographyPresets.apple[typographyStyle as TypographyStyle];
       
-      if (typographyStyle && typographyStyle in typographyPresets.apple) {
-        const preset = typographyPresets.apple[typographyStyle as TypographyStyle];
-        
-        // Batch state updates
-        batch(() => {
-          setFontFamily(preset.fontFamily);
-          setFontSize(preset.fontSize);
-          setFontWeight(preset.fontWeight);
-          setLetterSpacing(preset.letterSpacing);
-          setLineHeight(preset.lineHeight);
-          setColor(preset.color);
-          setSelectedStyle(typographyStyle as TypographyStyle);
-          setPosition(computedStyle.position as PositionType);
-        });
+      // Update all toolbar states to match the preset
+      setFontFamily(preset.fontFamily);
+      setFontSize(preset.fontSize);
+      setFontWeight(preset.fontWeight);
+      setLetterSpacing(preset.letterSpacing);
+      setLineHeight(preset.lineHeight);
+      setColor(preset.color);
+      setSelectedStyle(typographyStyle as TypographyStyle);
+      
+      // Get current position
+      setPosition(computedStyle.position as PositionType);
+      
+      // Update text formatting states
+      setIsBold(parseInt(preset.fontWeight) >= 700);
+      setIsItalic(computedStyle.fontStyle === 'italic');
+      setIsUnderline(computedStyle.textDecoration.includes('underline'));
+      setTextAlign(computedStyle.textAlign as 'left' | 'center' | 'right' | 'justify');
+      
+    } else {
+      // Fallback to matching computed styles
+      const matchingStyle = Object.entries(typographyPresets.apple).find(([_, preset]) => {
+        return (
+          preset.fontSize === computedStyle.fontSize &&
+          preset.fontWeight === computedStyle.fontWeight &&
+          preset.letterSpacing === computedStyle.letterSpacing &&
+          preset.lineHeight === computedStyle.lineHeight &&
+          preset.fontFamily.split(',')[0].trim() === computedStyle.fontFamily.split(',')[0].trim()
+        );
+      });
+
+      if (matchingStyle) {
+        const [styleName, preset] = matchingStyle;
+        setSelectedStyle(styleName as TypographyStyle);
+        setFontFamily(preset.fontFamily);
+        setFontSize(preset.fontSize);
+        setFontWeight(preset.fontWeight);
+        setLetterSpacing(preset.letterSpacing);
+        setLineHeight(preset.lineHeight);
+      } else {
+        // If no match found, use computed values
+        setFontFamily(computedStyle.fontFamily);
+        setFontSize(computedStyle.fontSize);
+        setFontWeight(computedStyle.fontWeight);
+        setLetterSpacing(computedStyle.letterSpacing);
+        setLineHeight(computedStyle.lineHeight);
+        setSelectedStyle('body'); // Default to body if no match
       }
-      setIsLoading(false);
-    });
-  }, []);
-
-  // Optimize element selection
-  const handleElementSelection = useCallback((element: HTMLElement) => {
-    event?.preventDefault();
-    event?.stopPropagation();
-    
-    setSelectedElement(element);
-    
-    // Defer non-critical updates
-    requestAnimationFrame(() => {
-      updateToolbarState(element);
       
-      const computedStyle = window.getComputedStyle(element);
-      const rect = element.getBoundingClientRect();
+      // Get current position
+      setPosition(computedStyle.position as PositionType);
       
-      setElementInfo({
-        // ... element info updates
-      });
-    });
-  }, [updateToolbarState]);
-
-  // Add loading indicator to toolbar
-  <div className="w-72 bg-zinc-800 p-4 rounded-lg shadow-lg h-full overflow-y-auto ml-4">
-    {isLoading ? (
-      <div className="flex items-center justify-center h-12">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
-      </div>
-    ) : (
-      // Toolbar content
-    )}
-  </div>
-
-  // Optimize style application
-  const applyStylesToElement = useCallback((element: HTMLElement, styles: any) => {
-    debouncedStyleUpdate(element, styles);
-  }, [debouncedStyleUpdate]);
-
-  // Cache element refs
-  const elementRefsCache = useMemo(() => new Map(), []);
-
-  // Optimize renderEditableText
-  const renderEditableText = useCallback((
-    content: string, 
-    className: string, 
-    elementId: string, 
-    typographyStyle: keyof typeof typographyPresets.apple, 
-    styleOverrides?: React.CSSProperties
-  ) => {
-    const baseStyles = useMemo(() => typographyPresets.apple[typographyStyle], [typographyStyle]);
-    
-    // ... rest of renderEditableText
-  }, [selectedElement, elementInfo]);
+      // Always update these from computed style
+      setColor(computedStyle.color);
+      setIsBold(computedStyle.fontWeight === 'bold' || parseInt(computedStyle.fontWeight) >= 700);
+      setIsItalic(computedStyle.fontStyle === 'italic');
+      setIsUnderline(computedStyle.textDecoration.includes('underline'));
+      setTextAlign(computedStyle.textAlign as 'left' | 'center' | 'right' | 'justify');
+    }
+  }
 
   const handleToolbarAction = (e: React.MouseEvent) => {
     // Prevent losing selection when clicking toolbar
@@ -970,21 +1077,28 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     applyStyleToSelection();
   }, [applyStyleToSelection]);
 
-  // Update the click handler to show controls for text object selection
-  const handleTextSelection = (element: HTMLElement) => {
-    if (element) {
-      const rect = element.getBoundingClientRect();
-      setInlineControlsPosition({
-        top: rect.top + window.scrollY,
-        left: rect.left + window.scrollX
-      });
-      setShowInlineControls(true);
+  // Update handleTextSelection to handle the event correctly
+  const handleTextSelection = (event: Event) => {
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      if (rect) {
+        setInlineControlsPosition({
+          top: rect.top + window.scrollY,
+          left: rect.left + window.scrollX,
+          right: rect.right + window.scrollX,
+          bottom: rect.bottom + window.scrollY
+        });
+        setShowInlineControls(true);
+      }
     } else {
       setShowInlineControls(false);
     }
   }
 
-  // Add event listeners
+  // Update the event listener setup
   useEffect(() => {
     document.addEventListener('selectionchange', handleTextSelection);
     return () => {
@@ -1134,29 +1248,55 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     return null;
   }
 
-  const applyStylePreset = (preset: keyof typeof stylePresets) => {
-    setSelectedStyle(preset);
-    const style = stylePresets[preset];
+  // Update the applyStylePreset function
+  const applyStylePreset = (style: TypographyStyle) => {
+    if (!selectedElement) return;
     
-    // Update all toolbar states to match the preset
-    setFontSize(style.fontSize);
-    setFontWeight(style.fontWeight);
-    setLetterSpacing(style.letterSpacing);
-    setLineHeight(style.lineHeight);
-    setFontFamily(style.fontFamily);
-    setIsBold(parseInt(style.fontWeight) >= 700);
+    // Get the preset from typography system
+    const preset = typographyPresets.apple[style];
+    if (!preset) return;
+
+    // Apply styles directly to element
+    selectedElement.style.fontFamily = preset.fontFamily;
+    selectedElement.style.fontSize = preset.fontSize;
+    selectedElement.style.fontWeight = preset.fontWeight;
+    selectedElement.style.letterSpacing = preset.letterSpacing;
+    selectedElement.style.lineHeight = preset.lineHeight;
+    selectedElement.style.color = preset.color;
     
-    // Apply styles to selected element
-    if (selectedElement) {
-      selectedElement.style.fontFamily = style.fontFamily;
-      selectedElement.style.fontSize = style.fontSize;
-      selectedElement.style.fontWeight = style.fontWeight;
-      selectedElement.style.letterSpacing = style.letterSpacing;
-      selectedElement.style.lineHeight = style.lineHeight;
-      
-      // Update toolbar state with the new styles
-      updateToolbarState(selectedElement);
-    }
+    // Update data attribute
+    selectedElement.setAttribute('data-typography', style);
+    
+    // Update className
+    selectedElement.className = cn(
+      preset.className,
+      'outline-none focus:outline-none'
+    );
+    
+    // Update all states
+    setSelectedStyle(style);
+    setFontFamily(preset.fontFamily);
+    setFontSize(preset.fontSize);
+    setFontWeight(preset.fontWeight);
+    setLetterSpacing(preset.letterSpacing);
+    setLineHeight(preset.lineHeight);
+    setColor(preset.color);
+    
+    // Force a rerender to update UI
+    requestAnimationFrame(() => {
+      setElementStyles(prev => {
+        const updated = new Map(prev);
+        const elementId = Array.from(elementRefs.current.entries())
+          .find(([_, el]) => el === selectedElement)?.[0];
+        if (elementId) {
+          updated.set(elementId, {
+            ...preset,
+            className: preset.className
+          });
+        }
+        return updated;
+      });
+    });
   }
 
   const renderTextOutline = (element: HTMLElement) => {
@@ -1338,44 +1478,53 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
   }, [isResizing]);
 
   // Update dimension preset handler
-  const handleDimensionPresetChange = (value: string) => {
-    // Prevent default behavior that might cause unselection
-    event?.preventDefault();
-    event?.stopPropagation();
-    
+  const handleDimensionPresetChange = (value: DimensionSize) => {
     setSelectedDimension(value);
     
     if (selectedElement) {
-      // Get typography style from the element
-      const typographyStyle = selectedElement.getAttribute('data-typography') as keyof typeof dimensionPresets;
+      const typographyStyle = selectedElement.getAttribute('data-typography') as keyof typeof typographyPresets.apple;
       
-      if (typographyStyle && dimensionPresets[typographyStyle]) {
-        const preset = dimensionPresets[typographyStyle][value as 'narrow' | 'medium' | 'wide'];
-        
+      if (typographyStyle) {
+        const preset = dimensionPresets[typographyStyle]?.[value];
         if (preset) {
-          // Apply styles directly
-          selectedElement.style.maxWidth = preset.maxWidth;
-          if (preset.ratio) {
-            selectedElement.style.aspectRatio = preset.ratio;
+          // Apply maxWidth if defined
+          if (preset.maxWidth) {
+            selectedElement.style.maxWidth = preset.maxWidth;
           }
           
-          // Update className without losing existing classes
-          const existingClasses = selectedElement.className
-            .split(' ')
-            .filter(cls => !cls.includes('max-w-') && !cls.includes('aspect-'));
+          // Apply width if defined
+          if (preset.width) {
+            selectedElement.style.width = preset.width;
+          }
           
+          // Update className
           selectedElement.className = cn(
-            ...existingClasses,
+            selectedElement.className.split(' ')
+              .filter(cls => !cls.includes('max-w-') && !cls.includes('w-')),
             preset.className
           );
-          
-          // Force a rerender to update the UI
-          setElementStyles(prev => new Map(prev));
         }
       }
     }
+  };
+
+  const handleElementSelection = (element: HTMLElement) => {
+    // Prevent default behavior
+    event?.preventDefault();
+    event?.stopPropagation();
+    
+    // Update selection
+    setSelectedElement(element);
+    updateToolbarState(element);
+    
+    // Update element info
+    const computedStyle = window.getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    
+    // ... rest of the selection logic ...
   }
 
+  // Add this function inside the component
   const handleControlChange = (handler: Function) => (value: any) => {
     // Prevent event propagation
     event?.preventDefault();
@@ -1388,6 +1537,44 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
     requestAnimationFrame(() => {
       setElementStyles(prev => new Map(prev));
     });
+  }
+
+  // Update the onFormatClick handler in the main component
+  const handleFormatClick = (type: string, value: string) => {
+    if (!selectedElement) return;
+
+    switch(type) {
+      case 'firstLineIndent':
+        const currentFirstIndent = parseInt(selectedElement.style.textIndent) || 0;
+        const newFirstIndent = value === 'increase' ? currentFirstIndent + 16 : Math.max(0, currentFirstIndent - 16);
+        selectedElement.style.textIndent = `${newFirstIndent}px`;
+        break;
+      
+      case 'blockIndent':
+        const currentBlockIndent = parseInt(selectedElement.style.paddingLeft) || 0;
+        const newBlockIndent = value === 'increase' ? currentBlockIndent + 16 : Math.max(0, currentBlockIndent - 16);
+        selectedElement.style.paddingLeft = `${newBlockIndent}px`;
+        break;
+      
+      case 'align':
+        selectedElement.style.textAlign = value;
+        break;
+      
+      case 'verticalAlign':
+        const parent = selectedElement.parentElement;
+        if (parent) {
+          parent.style.display = 'flex';
+          parent.style.flexDirection = 'column';
+          parent.style.minHeight = '100%';
+          parent.style.justifyContent = value === 'top' ? 'flex-start' : 
+                                      value === 'center' ? 'center' : 
+                                      'flex-end';
+        }
+        selectedElement.style.alignSelf = value === 'top' ? 'flex-start' : 
+                                        value === 'center' ? 'center' : 
+                                        'flex-end';
+        break;
+    }
   }
 
   if (!isOpen) return null;
@@ -1717,13 +1904,18 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
           <div 
             className="w-72 bg-zinc-800 p-4 rounded-lg shadow-lg h-full overflow-y-auto ml-4" 
             style={{ zIndex: 1100 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              // Prevent event propagation and default behavior
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onMouseDown={(e) => {
+              // Also prevent mousedown to maintain selection
+              e.preventDefault();
+              e.stopPropagation();
+            }}
           >
-            {isLoading ? (
-              <div className="flex items-center justify-center h-12">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
-              </div>
-            ) : (
+            {selectedElement && (
               <>
                 {/* Always show Typography System and Style Preset */}
                 <div className="p-3 bg-zinc-700 rounded-lg transition-all hover:bg-zinc-600 mb-4">
@@ -1732,8 +1924,13 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                     onValueChange={handleControlChange(handleDimensionPresetChange)}
                     value={selectedDimension}
                     onOpenChange={(open) => {
-                      // Prevent unselection when opening/closing the select
+                      // Prevent event propagation
+                      event?.preventDefault();
                       event?.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                     }}
                   >
                     <SelectTrigger className="w-full">
@@ -1932,6 +2129,14 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                         type="text"
                         value={buttonText}
                         onChange={(e) => setButtonText(e.target.value)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
                         className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
                       />
                     </div>
@@ -2061,6 +2266,14 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                           selectedElement.style.width = e.target.value;
                         }
                       }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
                       className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
                     />
                   </div>
@@ -2075,6 +2288,14 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                         if (selectedElement) {
                           selectedElement.style.height = e.target.value;
                         }
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                       }}
                       className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
                     />
@@ -2112,6 +2333,14 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                               selectedElement.style.top = e.target.value;
                             }
                           }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                           className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
                         />
                       </div>
@@ -2125,11 +2354,212 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
                               selectedElement.style.left = e.target.value;
                             }
                           }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                           className="w-full px-3 py-2 bg-zinc-600 text-white rounded"
                         />
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Add these controls to the toolbar, after the text alignment controls */}
+                <div className="mb-8">
+                  <h3 className="text-sm text-zinc-300 font-semibold mb-4 border-b border-zinc-700 pb-2">
+                    Text Position
+                  </h3>
+                  
+                  {/* Horizontal Alignment */}
+                  <div className="p-3 bg-zinc-700 rounded-lg mb-4">
+                    <div className="text-xs text-zinc-400 uppercase mb-2">Horizontal Align</div>
+                    <div className="flex justify-between gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleTextAlign('left')}
+                        className={cn("flex-1", textAlign === 'left' && "bg-zinc-600")}
+                      >
+                        <AlignLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleTextAlign('center')}
+                        className={cn("flex-1", textAlign === 'center' && "bg-zinc-600")}
+                      >
+                        <AlignCenter className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleTextAlign('right')}
+                        className={cn("flex-1", textAlign === 'right' && "bg-zinc-600")}
+                      >
+                        <AlignRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Tabulation (only when left-aligned) */}
+                  {textAlign === 'left' && (
+                    <div className="p-3 bg-zinc-700 rounded-lg mb-4">
+                      <div className="text-xs text-zinc-400 uppercase mb-2">Tabulation</div>
+                      <Select 
+                        onValueChange={handleControlChange((value) => {
+                          if (selectedElement) {
+                            selectedElement.style.textIndent = value;
+                          }
+                        })} 
+                        value={selectedElement?.style.textIndent || '0px'}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select tabulation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">None</SelectItem>
+                          <SelectItem value="2em">Small (2em)</SelectItem>
+                          <SelectItem value="4em">Medium (4em)</SelectItem>
+                          <SelectItem value="6em">Large (6em)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Vertical Alignment */}
+                  <div className="p-3 bg-zinc-700 rounded-lg mb-4">
+                    <div className="text-xs text-zinc-400 uppercase mb-2">Vertical Align</div>
+                    <Select 
+                      onValueChange={handleControlChange((value) => {
+                        if (selectedElement) {
+                          // Update parent container
+                          const parent = selectedElement.parentElement;
+                          if (parent) {
+                            parent.style.display = 'flex';
+                            parent.style.flexDirection = 'column';
+                            parent.style.minHeight = '100%';
+                            
+                            switch(value) {
+                              case 'top':
+                                parent.style.justifyContent = 'flex-start';
+                                break;
+                              case 'center':
+                                parent.style.justifyContent = 'center';
+                                break;
+                              case 'bottom':
+                                parent.style.justifyContent = 'flex-end';
+                                break;
+                            }
+                          }
+                          
+                          // Update element itself
+                          selectedElement.style.alignSelf = value === 'top' ? 'flex-start' : 
+                                                          value === 'center' ? 'center' : 
+                                                          'flex-end';
+                        }
+                      })}
+                      value={selectedElement?.style.alignSelf || 'flex-start'}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select vertical alignment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="top">Top</SelectItem>
+                        <SelectItem value="center">Center</SelectItem>
+                        <SelectItem value="bottom">Bottom</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Margins */}
+                  <div className="p-3 bg-zinc-700 rounded-lg mb-4">
+                    <div className="text-xs text-zinc-400 uppercase mb-2">Margins</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-zinc-400">Top</label>
+                        <input
+                          type="text"
+                          value={selectedElement?.style.marginTop || '0px'}
+                          onChange={(e) => {
+                            if (selectedElement) {
+                              selectedElement.style.marginTop = e.target.value;
+                            }
+                          }}
+                          className="w-full px-2 py-1 bg-zinc-600 rounded text-white text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-zinc-400">Bottom</label>
+                        <input
+                          type="text"
+                          value={selectedElement?.style.marginBottom || '0px'}
+                          onChange={(e) => {
+                            if (selectedElement) {
+                              selectedElement.style.marginBottom = e.target.value;
+                            }
+                          }}
+                          className="w-full px-2 py-1 bg-zinc-600 rounded text-white text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Update the indent control in the toolbar */}
+                <div className="mb-3">
+                  <label className="text-xs text-zinc-400 mb-1 block">Text Indent</label>
+                  <div className="space-y-2">
+                    {/* First Line Indent */}
+                    <div>
+                      <label className="text-xs text-zinc-400">First Line</label>
+                      <Select 
+                        onValueChange={handleControlChange((value) => {
+                          if (selectedElement) {
+                            selectedElement.style.textIndent = value;
+                          }
+                        })} 
+                        value={selectedElement?.style.textIndent || '0px'}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="First line indent" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0px">None</SelectItem>
+                          <SelectItem value="1em">Small (1em)</SelectItem>
+                          <SelectItem value="2em">Medium (2em)</SelectItem>
+                          <SelectItem value="4em">Large (4em)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Block Indent (using padding-left) */}
+                    <div>
+                      <label className="text-xs text-zinc-400">Block Indent</label>
+                      <Select 
+                        onValueChange={handleControlChange((value) => {
+                          if (selectedElement) {
+                            selectedElement.style.paddingLeft = value;
+                          }
+                        })} 
+                        value={selectedElement?.style.paddingLeft || '0px'}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Block indent" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0px">None</SelectItem>
+                          <SelectItem value="16px">Small (16px)</SelectItem>
+                          <SelectItem value="32px">Medium (32px)</SelectItem>
+                          <SelectItem value="48px">Large (48px)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
               </>
             )}
@@ -2173,6 +2603,8 @@ export default function TextEditorShowcase({ isOpen, onClose }: TextEditorShowca
           }}
         />
       )}
+      {/* Add QuickControls to the main return */}
+      <QuickControls selectedElement={selectedElement} />
     </div>
   )
 }

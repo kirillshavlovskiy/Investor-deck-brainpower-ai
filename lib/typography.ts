@@ -113,54 +113,53 @@ export const exampleContent = {
 export type TypographyPreset = keyof typeof typographyPresets;
 export type TypographyStyle = keyof typeof typographyPresets.apple;
 
-// Add dimension presets
-export const dimensionPresets = {
-  mainHeading: {
-    narrow: {
-      maxWidth: '60%', // 60% of container
-      width: 'auto',
-      ratio: '3/1', // wide and short
-      className: 'max-w-[60%] aspect-[3/1]'
-    },
-    medium: {
-      maxWidth: '75%',
-      width: 'auto',
-      ratio: '2/1',
-      className: 'max-w-[75%] aspect-[2/1]'
-    },
-    wide: {
-      maxWidth: '90%',
-      width: 'auto',
-      ratio: '3/2',
-      className: 'max-w-[90%] aspect-[3/2]'
-    }
+// Add type for dimension sizes
+export type DimensionSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' | 'auto';
+
+// Update the dimension preset type
+export interface DimensionPreset {
+  maxWidth?: string;
+  width?: string;
+  className: string;
+}
+
+export type DimensionPresets = {
+  [key in keyof typeof typographyPresets.apple]: {
+    [size in DimensionSize]: DimensionPreset;
+  };
+};
+
+// Add text positioning presets
+export const textPositioningPresets = {
+  indent: {
+    none: '0',
+    xs: '0.5em',
+    sm: '1em',
+    md: '1.5em',
+    lg: '2em',
+    xl: '3em',
+    '2xl': '4em'
   },
-  bodyText: {
-    narrow: {
-      maxWidth: '45ch', // character-based width
-      className: 'max-w-[45ch]'
+  verticalAlign: {
+    top: {
+      alignItems: 'flex-start',
+      alignSelf: 'flex-start'
     },
-    medium: {
-      maxWidth: '65ch',
-      className: 'max-w-[65ch]'
+    center: {
+      alignItems: 'center',
+      alignSelf: 'center'
     },
-    wide: {
-      maxWidth: '85ch',
-      className: 'max-w-[85ch]'
-    }
-  },
-  contentBlock: {
-    compact: {
-      width: '320px',
-      className: 'w-[320px]'
+    bottom: {
+      alignItems: 'flex-end',
+      alignSelf: 'flex-end'
     },
-    standard: {
-      width: '480px',
-      className: 'w-[480px]'
+    baseline: {
+      alignItems: 'baseline',
+      alignSelf: 'baseline'
     },
-    wide: {
-      width: '640px',
-      className: 'w-[640px]'
+    stretch: {
+      alignItems: 'stretch',
+      alignSelf: 'stretch'
     }
   }
 }
