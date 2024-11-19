@@ -1,100 +1,47 @@
-export const typographyPresets = {
-  apple: {
-    mainHeading: {
-      fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-      fontSize: '96px',
-      fontWeight: '700',
-      letterSpacing: '-0.015em',
-      lineHeight: '1.05',
-      color: '#1d1d1f',
-      marginBottom: '32px',
-      className: 'text-[96px] font-bold tracking-tight leading-tight'
-    },
-    heading: {
-      fontFamily: 'SF Pro Display, -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
-      fontSize: '80px',
-      fontWeight: '700',
-      letterSpacing: '-0.015em',
-      lineHeight: '1.05',
-      color: '#1d1d1f',
-      className: 'text-[80px] font-bold tracking-tight leading-tight'
-    },
-    mainTitle: {
-      fontFamily: 'SF Pro Display, system-ui, sans-serif',
-      fontSize: '56px',
-      fontWeight: '600',
-      letterSpacing: '-0.015em',
-      lineHeight: '1.1',
-      color: '#1d1d1f',
-      className: 'text-[56px] font-semibold tracking-tight leading-tight'
-    },
-    title: {
-      fontFamily: 'SF Pro Display, system-ui, sans-serif',
-      fontSize: '48px',
-      fontWeight: '500',
-      letterSpacing: '-0.015em',
-      lineHeight: '1.05',
-      color: '#1d1d1f',
-      className: 'text-[48px] font-medium tracking-tight leading-tight'
-    },
-    subtitle: {
-      fontFamily: 'SF Pro Display, system-ui, sans-serif',
-      fontSize: '32px',
-      fontWeight: '500',
-      letterSpacing: '-0.01em',
-      lineHeight: '1.05',
-      color: '#18181b',
-      className: 'text-[32px] font-medium tracking-tight leading-tight'
-    },
-    bodyText: {
-      fontFamily: 'SF Pro Display, system-ui, sans-serif',
-      fontSize: '28px',
-      fontWeight: '400',
-      letterSpacing: '-0.015em',
-      lineHeight: '1.25',
-      color: '#1d1d1f',
-      marginBottom: '16px',
-      maxWidth: '1000px',
-      className: 'text-[28px] font-normal tracking-tight leading-snug'
-    },
-    description: {
-      fontFamily: 'SF Pro Text, system-ui, sans-serif',
-      fontSize: '21px',
-      fontWeight: '400',
-      letterSpacing: 'normal',
-      lineHeight: '1.4',
-      color: '#52525b',
-      className: 'text-[21px] font-normal leading-relaxed'
-    },
-    body: {
-      fontFamily: 'SF Pro Text, system-ui, sans-serif',
-      fontSize: '17px',
-      fontWeight: '400',
-      letterSpacing: '0',
-      lineHeight: '1.47059',
-      color: '#1d1d1f',
-      className: 'text-[17px] font-normal leading-normal'
-    },
-    link: {
-      fontFamily: 'SF Pro Text, system-ui, sans-serif',
-      fontSize: '17px',
-      fontWeight: '500',
-      letterSpacing: 'normal',
-      lineHeight: '1.4',
-      color: '#0066CC',
-      className: 'text-[17px] font-medium leading-normal text-blue-600'
-    },
-    cta: {
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: '20px',
-      fontWeight: '500',
-      letterSpacing: '-0.01em',
-      lineHeight: '1.2',
-      color: '#1d1d1f',
-      className: 'text-[20px] font-medium tracking-tight leading-snug'
-    }
-  }
+import { 
+  typographyPresets as utilsTypographyPresets,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  letterSpacings,
+  lineHeights
+} from './utils'
+
+export type TypographyStyle = keyof typeof utilsTypographyPresets.apple;
+
+export type DimensionSize = '25%' | '33%' | '50%' | '66%' | '75%' | '100%';
+
+export interface DimensionPreset {
+  maxWidth: string;
+  width: string;
 }
+
+// Export typography constants
+export {
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  letterSpacings,
+  lineHeights
+};
+
+// Export typographyPresets with a different name to avoid conflicts
+export const typographyPresets = utilsTypographyPresets;
+
+// Helper function for getting typography styles
+export const getTypographyStyle = (style: TypographyStyle) => {
+  return typographyPresets.apple[style];
+};
+
+// Single definition of dimensionPresets
+export const dimensionPresets: Record<DimensionSize, DimensionPreset> = {
+  '25%': { maxWidth: '25%', width: '100%' },
+  '33%': { maxWidth: '33.333333%', width: '100%' },
+  '50%': { maxWidth: '50%', width: '100%' },
+  '66%': { maxWidth: '66.666667%', width: '100%' },
+  '75%': { maxWidth: '75%', width: '100%' },
+  '100%': { maxWidth: '100%', width: '100%' }
+};
 
 export const exampleContent = {
   pricing: {
@@ -108,108 +55,11 @@ export const exampleContent = {
       "Arcade"
     ]
   }
-}
-
-export type TypographyPreset = keyof typeof typographyPresets;
-export type TypographyStyle = keyof typeof typographyPresets.apple;
-
-// Add type for dimension sizes
-export type DimensionSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' | 'auto';
-
-// Update the dimension preset type
-export interface DimensionPreset {
-  maxWidth?: string;
-  width?: string;
-  className: string;
-}
-
-export type DimensionPresets = {
-  [key in keyof typeof typographyPresets.apple]: {
-    [size in DimensionSize]: DimensionPreset;
-  };
 };
 
-// Add text positioning presets
-export const textPositioningPresets = {
-  indent: {
-    none: '0',
-    xs: '0.5em',
-    sm: '1em',
-    md: '1.5em',
-    lg: '2em',
-    xl: '3em',
-    '2xl': '4em'
-  },
-  verticalAlign: {
-    top: {
-      alignItems: 'flex-start',
-      alignSelf: 'flex-start'
-    },
-    center: {
-      alignItems: 'center',
-      alignSelf: 'center'
-    },
-    bottom: {
-      alignItems: 'flex-end',
-      alignSelf: 'flex-end'
-    },
-    baseline: {
-      alignItems: 'baseline',
-      alignSelf: 'baseline'
-    },
-    stretch: {
-      alignItems: 'stretch',
-      alignSelf: 'stretch'
-    }
-  }
+export interface TypographyPreset {
+  fontSize: string;
+  lineHeight: string;
+  fontWeight: number | string;
+  // add other properties as needed
 }
-
-// Add the dimension presets
-export const dimensionPresets = {
-  mainHeading: {
-    xs: {
-      maxWidth: '40%',
-      width: 'auto',
-      className: 'max-w-[40%]'
-    },
-    sm: {
-      maxWidth: '50%',
-      width: 'auto',
-      className: 'max-w-[50%]'
-    },
-    md: {
-      maxWidth: '60%',
-      width: 'auto',
-      className: 'max-w-[60%]'
-    },
-    lg: {
-      maxWidth: '75%',
-      width: 'auto',
-      className: 'max-w-[75%]'
-    },
-    xl: {
-      maxWidth: '85%',
-      width: 'auto',
-      className: 'max-w-[85%]'
-    },
-    '2xl': {
-      maxWidth: '95%',
-      width: 'auto',
-      className: 'max-w-[95%]'
-    },
-    full: {
-      maxWidth: '100%',
-      width: '100%',
-      className: 'w-full'
-    },
-    auto: {
-      maxWidth: 'none',
-      width: 'auto',
-      className: 'w-auto'
-    }
-  },
-  // Add similar presets for other typography styles...
-}
-
-// Export the dimension presets
-export { dimensionPresets };
