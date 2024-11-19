@@ -163,3 +163,53 @@ export const textPositioningPresets = {
     }
   }
 }
+
+// Add the dimension presets
+export const dimensionPresets = {
+  mainHeading: {
+    xs: {
+      maxWidth: '40%',
+      width: 'auto',
+      className: 'max-w-[40%]'
+    },
+    sm: {
+      maxWidth: '50%',
+      width: 'auto',
+      className: 'max-w-[50%]'
+    },
+    md: {
+      maxWidth: '60%',
+      width: 'auto',
+      className: 'max-w-[60%]'
+    },
+    lg: {
+      maxWidth: '75%',
+      width: 'auto',
+      className: 'max-w-[75%]'
+    },
+    xl: {
+      maxWidth: '85%',
+      width: 'auto',
+      className: 'max-w-[85%]'
+    },
+    '2xl': {
+      maxWidth: '95%',
+      width: 'auto',
+      className: 'max-w-[95%]'
+    },
+    full: {
+      maxWidth: '100%',
+      width: '100%',
+      className: 'w-full'
+    },
+    auto: {
+      maxWidth: 'none',
+      width: 'auto',
+      className: 'w-auto'
+    }
+  },
+  // Add similar presets for other typography styles...
+}
+
+// Export the dimension presets
+export { dimensionPresets };
